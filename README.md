@@ -45,6 +45,14 @@ webmentions to any URLs found in the HTML files it encounters.
 webmention-cli --uri https://example.com --dir ./dist
 ```
 
+The CLI accepts the following options:
+
+- `-u`, `--uri`: The base URI of the website. Used to construct the source URLs for the webmention.
+- `-d`, `--dir`: The directory to recursively walk for HTML files.
+- `-dr`, `--dry-run`: Don't send any webmentions, but print the URLs that would be sent.
+- `-v`, `--version`: Print the version number.
+- `-h`, `--help`: Print usage information.
+
 ### webmention-javalin
 
 The Javalin plugin exposes an endpoint at a configurable path which can be used to receive webmentions, and to retrieve
@@ -68,3 +76,13 @@ The endpoint accepts the following query parameters:
 The service is a simple Javalin application that receives webmentions and stores them in a database. It can be run in a
 container and should be deployed behind a reverse proxy which handles SSL termination and rate limiting. You don't want
 to be turned into a DDoS zombie. I like [nginx](https://nginx.org/).
+
+The service accepts the following environment variables:
+
+- `WEBMENTION_SERVER_PORT`: The port to listen on. Required. Defaults to 8080.
+- `WEBMENTION_DB_CONNECTION_STRING`: The JDBC connection string for the database. Required. Defaults to a SQLite database in the
+  current directory named `webmentions.db`.
+- `WEBMENTION_ENDPOINT`: The endpoint to listen on for webmentions. Required. Defaults to `/webmention`.
+- `WEBMENTION_SUPPORTED_DOMAINS`: A comma-separated list of domains for which webmentions are accepted. Required.
+- `WEBMENTION_TEST_MODE`: If set to `true`, the service will expose two test endpoints for receiving and sending webmentions. Defaults to `false`.
+- `WEBMENTION_CONNECTION_TIMEOUT_IN_MILLISECONDS`: The timeout for establishing a connection to target URLs and webmention endpoints. Defaults to 5000 milliseconds.
