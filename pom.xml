@@ -9,7 +9,7 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <modules>
-        <module>webmention</module>
+        <module>webmention-core</module>
         <module>webmention-javalin</module>
         <module>webmention-service</module>
         <module>webmention-cli</module>

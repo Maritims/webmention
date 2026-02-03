@@ -19,7 +19,7 @@
     <dependencies>
         <dependency>
             <groupId>no.clueless</groupId>
-            <artifactId>webmention</artifactId>
+            <artifactId>webmention-core</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
