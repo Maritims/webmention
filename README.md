@@ -77,6 +77,8 @@ The service is a simple Javalin application that receives webmentions and stores
 container and should be deployed behind a reverse proxy which handles SSL termination and rate limiting. You don't want
 to be turned into a DDoS zombie. I like [nginx](https://nginx.org/).
 
+For the easiest deployment, use [the provided Dockerfile](/webmention-service/Dockerfile) to build an image and run it with Docker:.
+
 The service accepts the following environment variables:
 
 - `WEBMENTION_SERVER_PORT`: The port to listen on. Required. Defaults to 8080.
