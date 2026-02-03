@@ -30,32 +30,15 @@ public class Application {
         final var testMode           = Optional.ofNullable(System.getenv("WEBMENTION_TEST_MODE")).map("true"::equalsIgnoreCase).orElse(false);
         final var connectTimeout     = Optional.ofNullable(System.getenv("WEBMENTION_CONNECTION_TIMEOUT_IN_MILLISECONDS")).map(Long::parseLong).map(Duration::ofMillis).orElse(Duration.ofMillis(5000));
 
-        final var httpClient = SecureHttpClient.newClient(connectTimeout, !testMode);
-        final var webmentionEndpointDiscoverer = WebmentionEndpointDiscoverer.newBuilder()
-                .httpClient(httpClient)
-                .build();
-        final var targetVerifier = DefaultWebmentionTargetVerifier.newBuilder()
-                .supportedDomains(supportedDomains)
-                .httpClient(httpClient)
-                .endpointDiscoverer(webmentionEndpointDiscoverer)
-                .build();
-        final var webmentionRepository = new SqliteWebmentionRepository(connectionString).initialize();
-        final var onWebmentionReceived = new SubmissionPublisher<WebmentionEvent>();
-        final var receiver = WebmentionReceiver.newBuilder()
-                .httpClient(httpClient)
-                .requestVerifier(WebmentionRequestVerifier.newBuilder().targetVerifier(targetVerifier).build())
-                .onWebmentionReceived(onWebmentionReceived)
-                .build();
-        final var webmentionProcessor = WebmentionProcessor.newBuilder()
-                .rateLimiter(WebmentionRateLimiter.newBuilder().maxEntries(5000).cooldownMillis(5).build())
-                .receiver(receiver)
-                .build();
-        final var webmentionSender = WebmentionSender.newBuilder()
-                .httpClient(httpClient)
-                .submissionPublisher(new SubmissionPublisher<>())
-                .endpointDiscoverer(webmentionEndpointDiscoverer)
-                .build();
-        final var webmentionNotifier = new WebmentionEmailViaResendNotifier();
+        final var httpClient                   = SecureHttpClient.newClient(connectTimeout, !testMode);
+        final var webmentionEndpointDiscoverer = WebmentionEndpointDiscoverer.newBuilder().httpClient(httpClient).build();
+        final var targetVerifier               = DefaultWebmentionTargetVerifier.newBuilder().supportedDomains(supportedDomains).httpClient(httpClient).endpointDiscoverer(webmentionEndpointDiscoverer).build();
+        final var webmentionRepository         = new SqliteWebmentionRepository(connectionString).initialize();
+        final var onWebmentionReceived         = new SubmissionPublisher<WebmentionEvent>();
+        final var receiver                     = WebmentionReceiver.newBuilder().httpClient(httpClient).requestVerifier(WebmentionRequestVerifier.newBuilder().targetVerifier(targetVerifier).build()).onWebmentionReceived(onWebmentionReceived).build();
+        final var webmentionProcessor          = WebmentionProcessor.newBuilder().rateLimiter(WebmentionRateLimiter.newBuilder().maxEntries(5000).cooldownMillis(5).build()).receiver(receiver).build();
+        final var webmentionSender             = WebmentionSender.newBuilder().httpClient(httpClient).submissionPublisher(new SubmissionPublisher<>()).endpointDiscoverer(webmentionEndpointDiscoverer).build();
+        final var webmentionNotifier           = new WebmentionEmailViaResendNotifier();
 
         onWebmentionReceived.subscribe(new WebmentionReceivedSubscriber<>(webmentionRepository, webmentionNotifier));
         webmentionProcessor.start();

@@ -10,9 +10,10 @@ This is a Java implementation of the [Webmention specification](https://www.w3.o
 ## Project structure
 
 - webmention-core: Core library.
-- webmention-cli: A CLI for sending webmentions while building a static website.
-- webmention-javalin: A Javalin plugin for receiving webmentions.
-- webmention-service: A microservice using Javalin and the webmention-javalin plugin to receive webmentions.
+- [webmention-cli](#webmention-cli): A CLI for sending webmentions while building a static website.
+- [webmention-javalin](#webmention-javalin): A Javalin plugin for receiving webmentions.
+- [webmention-service](#webmention-service): A microservice using Javalin and the webmention-javalin plugin to receive
+  webmentions.
 
 ## Security measures
 
@@ -55,8 +56,9 @@ The CLI accepts the following options:
 
 ### webmention-javalin
 
-The Javalin plugin exposes an endpoint at a configurable path which can be used to receive webmentions, and to retrieve
-your received webmentions in a paginated manner. Receiving webmentions is described in [the specification](https://www.w3.org/TR/2017/REC-webmention-20170112/#receiving-webmentions).
+The Javalin plugin exposes an endpoint at a configurable path which can be used to receive webmentions and to retrieve
+your received webmentions in a paginated manner. Receiving webmentions is described
+in [the specification](https://www.w3.org/TR/2017/REC-webmention-20170112/#receiving-webmentions).
 
 Retrieving all webmentions is done by sending a GET request to the endpoint:
 
@@ -71,20 +73,43 @@ The endpoint accepts the following query parameters:
 - orderByColumn: The column to order the webmentions by. Defaults to `id`.
 - orderByDirection: The direction to order the webmentions by. Defaults to `DESC`.
 
+The plugin is registered in the following way, but for the full example have a look at the [webmention-service](#webmention-service) project, specifically the [Application](/webmention-service/src/main/java/no/clueless/webmention/service/Application.java) class:
+
+```java
+var javalin = Javalin.create(config -> {
+    config.jsonMapper(new JavalinJackson(new ObjectMapper()
+            .registerModule(new JavaTimeModule())
+            .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false), true
+    ));
+
+    config.registerPlugin(new WebmentionPlugin(plugin -> {
+        plugin.setEndpoint(webmentionEndpoint);
+        plugin.setProcessor(webmentionProcessor);
+        plugin.setSender(webmentionSender);
+        plugin.setWebmentionRepository(webmentionRepository);
+        plugin.setTestMode(testMode);
+    }));
+});
+```
+
 ### webmention-service
 
 The service is a simple Javalin application that receives webmentions and stores them in a database. It can be run in a
 container and should be deployed behind a reverse proxy which handles SSL termination and rate limiting. You don't want
 to be turned into a DDoS zombie. I like [nginx](https://nginx.org/).
 
-For the easiest deployment, use [the provided Dockerfile](/webmention-service/Dockerfile) to build an image and run it with Docker:.
+For the easiest deployment, use [the provided Dockerfile](/webmention-service/Dockerfile) to build an image and run it
+with Docker:.
 
 The service accepts the following environment variables:
 
 - `WEBMENTION_SERVER_PORT`: The port to listen on. Required. Defaults to 8080.
-- `WEBMENTION_DB_CONNECTION_STRING`: The JDBC connection string for the database. Required. Defaults to a SQLite database in the
+- `WEBMENTION_DB_CONNECTION_STRING`: The JDBC connection string for the database. Required. Defaults to a SQLite
+  database in the
   current directory named `webmentions.db`.
 - `WEBMENTION_ENDPOINT`: The endpoint to listen on for webmentions. Required. Defaults to `/webmention`.
 - `WEBMENTION_SUPPORTED_DOMAINS`: A comma-separated list of domains for which webmentions are accepted. Required.
-- `WEBMENTION_TEST_MODE`: If set to `true`, the service will expose two test endpoints for receiving and sending webmentions. Defaults to `false`.
-- `WEBMENTION_CONNECTION_TIMEOUT_IN_MILLISECONDS`: The timeout for establishing a connection to target URLs and webmention endpoints. Defaults to 5000 milliseconds.
+- `WEBMENTION_TEST_MODE`: If set to `true`, the service will expose two test endpoints for receiving and sending
+  webmentions. Defaults to `false`.
+- `WEBMENTION_CONNECTION_TIMEOUT_IN_MILLISECONDS`: The timeout for establishing a connection to target URLs and
+  webmention endpoints. Defaults to 5000 milliseconds.
