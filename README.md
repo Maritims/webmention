@@ -45,6 +45,24 @@ webmentions to any URLs found in the HTML files it encounters.
 webmention-cli --uri https://example.com --dir ./dist
 ```
 
+### webmention-javalin
+
+The Javalin plugin exposes an endpoint at a configurable path which can be used to receive webmentions, and to retrieve
+your received webmentions in a paginated manner. Receiving webmentions is described in [the specification](https://www.w3.org/TR/2017/REC-webmention-20170112/#receiving-webmentions).
+
+Retrieving all webmentions is done by sending a GET request to the endpoint:
+
+```bash
+curl https://example.com/webmentions 
+```
+
+The endpoint accepts the following query parameters:
+
+- pageNumber: The page number to retrieve. Defaults to 0.
+- pageSize: The number of webmentions per page. Defaults to 10.
+- orderByColumn: The column to order the webmentions by. Defaults to `id`.
+- orderByDirection: The direction to order the webmentions by. Defaults to `DESC`.
+
 ### webmention-service
 
 The service is a simple Javalin application that receives webmentions and stores them in a database. It can be run in a
