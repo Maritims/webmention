@@ -1,4 +1,4 @@
-package no.clueless.webmention_service;
+package no.clueless.webmention.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -12,7 +12,7 @@ import no.clueless.webmention.http.SecureHttpClient;
 import no.clueless.webmention.notifier.email.WebmentionEmailViaResendNotifier;
 import no.clueless.webmention.persistence.sqlite.SqliteWebmentionRepository;
 import no.clueless.webmention.receiver.*;
-import no.clueless.webmention_javalin.WebmentionPlugin;
+import no.clueless.webmention.javalin.WebmentionPlugin;
 import no.clueless.webmention.sender.WebmentionSender;
 
 import java.time.Duration;

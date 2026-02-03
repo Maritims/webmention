@@ -1,4 +1,4 @@
-package no.clueless.webmention_javalin;
+package no.clueless.webmention.javalin;
 
 import io.javalin.config.JavalinConfig;
 import io.javalin.http.BadRequestResponse;

@@ -2,8 +2,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <parent>
     <artifactId>webmention-parent</artifactId>
-    <groupId>no.clueless.webmention_parent</groupId>
-    <version>1.0-SNAPSHOT</version>
+    <groupId>no.clueless</groupId>
+    <version>1.0.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>no.clueless.webmention_cli</groupId>
@@ -28,7 +28,7 @@
             <configuration>
               <transformers>
                 <transformer>
-                  <mainClass>no.clueless.webmention_cli.Application</mainClass>
+                  <mainClass>no.clueless.webmention.cli.Application</mainClass>
                 </transformer>
               </transformers>
               <filters>
@@ -67,7 +67,7 @@
               </execution>
             </executions>
             <configuration>
-              <mainClass>no.clueless.webmention_cli.Application</mainClass>
+              <mainClass>no.clueless.webmention.cli.Application</mainClass>
               <buildArgs>-H:IncludeResources=application.properties</buildArgs>
             </configuration>
           </plugin>
@@ -114,8 +114,6 @@
     </dependency>
   </dependencies>
   <properties>
-    <maven.compiler.target>21</maven.compiler.target>
-    <maven.compiler.source>21</maven.compiler.source>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 </project>

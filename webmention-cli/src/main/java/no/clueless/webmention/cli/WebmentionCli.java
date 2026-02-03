@@ -1,4 +1,4 @@
-package no.clueless.webmention_cli;
+package no.clueless.webmention.cli;
 
 import no.clueless.webmention.UnexpectedContentTypeException;
 import no.clueless.webmention.WebmentionEndpointDiscoverer;

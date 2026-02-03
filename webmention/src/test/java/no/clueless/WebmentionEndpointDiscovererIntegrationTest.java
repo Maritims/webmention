@@ -1,5 +1,7 @@
-package no.clueless.webmention;
+package no.clueless;
 
+import no.clueless.webmention.UnexpectedContentTypeException;
+import no.clueless.webmention.WebmentionEndpointDiscoverer;
 import no.clueless.webmention.http.SecureHttpClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

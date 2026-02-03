@@ -1,4 +1,4 @@
-package no.clueless.webmention_javalin;
+package no.clueless.webmention.javalin;
 
 import io.javalin.http.Context;
 import no.clueless.webmention.UnexpectedContentTypeException;

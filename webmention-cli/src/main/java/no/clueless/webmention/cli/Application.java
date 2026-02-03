@@ -1,4 +1,4 @@
-package no.clueless.webmention_cli;
+package no.clueless.webmention.cli;
 
 import java.io.IOException;
 import java.net.URI;

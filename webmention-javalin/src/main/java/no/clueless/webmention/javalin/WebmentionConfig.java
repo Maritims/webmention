@@ -1,4 +1,4 @@
-package no.clueless.webmention_javalin;
+package no.clueless.webmention.javalin;
 
 import no.clueless.webmention.persistence.WebmentionRepository;
 import no.clueless.webmention.receiver.WebmentionProcessor;

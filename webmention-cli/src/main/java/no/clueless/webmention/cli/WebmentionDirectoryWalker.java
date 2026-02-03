@@ -1,4 +1,4 @@
-package no.clueless.webmention_cli;
+package no.clueless.webmention.cli;
 
 import no.clueless.webmention.event.WebmentionEvent;
 import no.clueless.webmention.receiver.WebmentionHtmlSourceScanner;
