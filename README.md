@@ -68,10 +68,10 @@ curl https://example.com/webmentions
 
 The endpoint accepts the following query parameters:
 
-- pageNumber: The page number to retrieve. Defaults to 0.
-- pageSize: The number of webmentions per page. Defaults to 10.
-- orderByColumn: The column to order the webmentions by. Defaults to `id`.
-- orderByDirection: The direction to order the webmentions by. Defaults to `DESC`.
+- `pageNumber`: The page number to retrieve. Defaults to 0.
+- `pageSize`: The number of webmentions per page. Defaults to 10.
+- `orderByColumn`: The column to order the webmentions by. Defaults to `id`.
+- `orderByDirection`: The direction to order the webmentions by. Defaults to `DESC`.
 
 The plugin is registered in the following way, but for the full example have a look at the [webmention-service](#webmention-service) project, specifically the [Application](/webmention-service/src/main/java/no/clueless/webmention/service/Application.java) class:
 
@@ -99,7 +99,7 @@ container and should be deployed behind a reverse proxy which handles SSL termin
 to be turned into a DDoS zombie. I like [nginx](https://nginx.org/).
 
 For the easiest deployment, use [the provided Dockerfile](/webmention-service/Dockerfile) to build an image and run it
-with Docker:.
+with Docker:
 
 The service accepts the following environment variables:
 
