@@ -164,6 +164,10 @@
                 <extensions>true</extensions>
                 <configuration>
                     <publishingServerId>central</publishingServerId>
+                    <excludeArtifacts>
+                        <artifactId>webmention-cli</artifactId>
+                        <aritfactId>webmention-service</aritfactId>
+                    </excludeArtifacts>
                 </configuration>
             </plugin>
         </plugins>
