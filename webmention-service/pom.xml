@@ -12,6 +12,7 @@
     <artifactId>webmention-service</artifactId>
 
     <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
