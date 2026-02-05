@@ -10,6 +10,7 @@
     </parent>
 
     <artifactId>webmention-service</artifactId>
+    <name>${project.artifactId}</name>
 
     <properties>
         <maven.deploy.skip>true</maven.deploy.skip>

@@ -9,8 +9,8 @@
         <version>0.0.1-alpha.1-SNAPSHOT</version>
     </parent>
 
-    <groupId>no.clueless.webmention_cli</groupId>
     <artifactId>webmention-cli</artifactId>
+    <name>${project.artifactId}</name>
 
     <properties>
         <maven.deploy.skip>true</maven.deploy.skip>
