@@ -35,8 +35,8 @@
     </developers>
 
     <scm>
-        <connection>scm:git:https://github.com/Maritims/webmention.git</connection>
-        <developerConnection>scm:git:ssh://github.com:Maritims/webmention.git</developerConnection>
+        <connection>scm:git:git@github.com:Maritims/webmention.git</connection>
+        <developerConnection>scm:git:git@github.com:Maritims/webmention.git</developerConnection>
         <url>https://github.com/Maritims/webmention/tree/master</url>
         <tag>HEAD</tag>
     </scm>
