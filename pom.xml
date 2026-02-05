@@ -21,9 +21,8 @@
 
     <licenses>
         <license>
-            <name>GNU General Public License v3.0</name>
-            <url>https://www.gnu.org/licenses/gpl-3.0.txt</url>
-            <distribution>repo</distribution>
+            <name>MIT License</name>
+            <url>https://opensource.org/license/mit</url>
         </license>
     </licenses>
 
@@ -31,13 +30,14 @@
         <developer>
             <name>Martin Severin Steffensen</name>
             <email>martin.severin.steffensen@proton.me</email>
+            <url>https://clueless.no</url>
         </developer>
     </developers>
 
     <scm>
         <connection>scm:git:https://github.com/Maritims/webmention.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com:Maritims/webmention.git</developerConnection>
-        <url>https://github.com/Maritims/webmention</url>
+        <developerConnection>scm:git:ssh://github.com:Maritims/webmention.git</developerConnection>
+        <url>https://github.com/Maritims/webmention/tree/master</url>
         <tag>HEAD</tag>
     </scm>
 
