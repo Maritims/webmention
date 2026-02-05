@@ -6,7 +6,7 @@
     <parent>
         <groupId>no.clueless</groupId>
         <artifactId>webmention-parent</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>0.0.1-alpha.1-SNAPSHOT</version>
     </parent>
 
     <artifactId>webmention-core</artifactId>
