@@ -1,4 +1,6 @@
 .env
+*.db
 *.iml
+dependency-reduced-pom.xml
 .idea/
 target/
