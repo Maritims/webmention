@@ -42,6 +42,8 @@ The CLI is built as a native executable using GraalVM. You'd typically run it in
 and published your website. In the example below, the CLI will recursively walk the `./dist` directory and send
 webmentions to any URLs found in the HTML files it encounters.
 
+To install, download the latest release from the [releases page](https://github.com/Maritims/webmention/releases).
+
 ```bash
 webmention-cli --uri https://example.com --dir ./dist
 ```
@@ -53,6 +55,18 @@ The CLI accepts the following options:
 - `-dr`, `--dry-run`: Don't send any webmentions, but print the URLs that would be sent.
 - `-v`, `--version`: Print the version number.
 - `-h`, `--help`: Print usage information.
+
+### webmention-core
+
+To include the webmention-core module in your project, add the following dependency:
+
+```xml
+<dependency>
+    <groupId>no.clueless</groupId>
+    <artifactId>webmention-core</artifactId>
+    <version>0.0.1-alpha.1</version>
+</dependency>
+```
 
 ### webmention-javalin
 
