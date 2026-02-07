@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y git && \
     mvn clean package -DskipTests -Dgpg.skip
 
 # Stage 2: Runtime
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 WORKDIR /app
 
 # 1. Create a data directory and set ownership
