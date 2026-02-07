@@ -1,0 +1,1 @@
+export { WebmentionList } from './src/webmention-list.js';
