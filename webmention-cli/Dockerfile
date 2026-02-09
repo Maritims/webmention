@@ -19,6 +19,8 @@ COPY --from=builder --chown=1000:1000 /build/webmention-cli/target/webmention-cl
 
 USER 1000
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+WORKDIR /app/data
+
+ENTRYPOINT ["java", "-jar", "../app.jar"]
 
 CMD ["--help"]

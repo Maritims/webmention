@@ -9,7 +9,7 @@ This is a Java implementation of the [Webmention specification](https://www.w3.o
 
 ## Project structure
 
-- webmention-core: Core library.
+- [webmention-core](#webmention-core): Core library.
 - [webmention-cli](#webmention-cli): A CLI for sending webmentions while building a static website.
 - [webmention-javalin](#webmention-javalin): A Javalin plugin for receiving webmentions.
 - [webmention-service](#webmention-service): A microservice using Javalin and the webmention-javalin plugin to receive
@@ -38,14 +38,25 @@ counter-act being turned into a DDoS zombie, the webmention-core module implemen
 
 ### webmention-cli
 
-The CLI is built as a native executable using GraalVM. You'd typically run it in a post-publish hook after you've built
+The CLI is built as a container image which can be run with either Podman or Docker. You'd typically run it in a post-publish hook after you've built
 and published your website. In the example below, the CLI will recursively walk the `./dist` directory and send
 webmentions to any URLs found in the HTML files it encounters.
 
-To install, download the latest release from the [releases page](https://github.com/Maritims/webmention/releases).
+First pull the image:
 
 ```bash
-webmention-cli --uri https://example.com --dir ./dist
+podman pull docker.io/maritims/webmention-cli:latest
+```
+
+Then run the CLI:
+
+```bash
+
+podman run --rm \
+  -v $(pwd):/app/data:Z \
+  webmention-cli:latest \
+  -u https://example.com \
+  -d ./dist
 ```
 
 The CLI accepts the following options:
