@@ -14,7 +14,11 @@ RUN mvn clean package -DskipTests -Dgpg.skip
 
 FROM eclipse-temurin:25-jre-alpine
 WORKDIR /app
+
 COPY --from=builder --chown=1000:1000 /build/webmention-cli/target/webmention-cli-*.jar app.jar
+
 USER 1000
+
 ENTRYPOINT ["java", "-jar", "app.jar"]
+
 CMD ["--help"]
