@@ -2,6 +2,7 @@ package no.clueless.webmention.cli;
 
 import no.clueless.webmention.event.WebmentionEvent;
 import no.clueless.webmention.receiver.WebmentionHtmlSourceScanner;
+import org.jsoup.nodes.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,6 +14,7 @@ import java.nio.file.NotDirectoryException;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -49,7 +51,7 @@ public class WebmentionDirectoryWalker {
         return URI.create(base).resolve(pathFragment).toString();
     }
 
-    public Set<WebmentionEvent> walk(URI baseUri, Path rootDir, Set<WebmentionEvent> webmentionEvents) throws IOException {
+    public Set<WebmentionEvent> walk(URI baseUri, Path rootDir, Predicate<Element> elementFilter, Set<WebmentionEvent> webmentionEvents) throws IOException {
         Objects.requireNonNull(rootDir, "rootDir cannot be null");
         Objects.requireNonNull(webmentionEvents, "webmentionEvents cannot be null");
 
@@ -68,7 +70,7 @@ public class WebmentionDirectoryWalker {
                         try {
                             var body      = Files.readString(file);
                             var sourceUrl = createSourceUrl(baseUri, rootDir, file);
-                            return webmentionHtmlSourceScanner.findAllMentions(body)
+                            return webmentionHtmlSourceScanner.findAllMentions(body, elementFilter)
                                     .entrySet()
                                     .stream()
                                     .map(entry -> new WebmentionEvent(sourceUrl, entry.getKey().toString(), entry.getValue()));

@@ -64,6 +64,7 @@ The CLI accepts the following options:
 - `-u`, `--uri`: The base URI of the website. Used to construct the source URLs for the webmention.
 - `-d`, `--dir`: The directory to recursively walk for HTML files.
 - `-dr`, `--dry-run`: Don't send any webmentions, but print the URLs that would be sent.
+- `-r,`, `--restrictive`: Only send webmentions to targets from elements with the attribute "data-webmention". 
 - `-v`, `--version`: Print the version number.
 - `-h`, `--help`: Print usage information.
 

@@ -9,6 +9,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class WebmentionHtmlSourceScanner implements WebmentionSourceScanner {
@@ -32,10 +33,18 @@ public class WebmentionHtmlSourceScanner implements WebmentionSourceScanner {
                 .findFirst();
     }
 
-    public Map<URI, String> findAllMentions(String body) {
+    /**
+     * Finds all webmentions in the given body and filters by the given elementFilter.
+     *
+     * @param body          The HTML body to scan for mentions.
+     * @param elementFilter The elementFilter to filter mentions by.
+     * @return A map of all mentions found in the body by URI.
+     */
+    public Map<URI, String> findAllMentions(String body, Predicate<Element> elementFilter) {
         var document = Jsoup.parse(body);
         var elements = document.select("a[href], img[href], video[src]");
         return elements.stream()
+                .filter(elementFilter)
                 .map(element -> {
                     var tagName = element.tagName().toLowerCase();
                     return switch (tagName) {
@@ -52,7 +61,7 @@ public class WebmentionHtmlSourceScanner implements WebmentionSourceScanner {
                             }
                         }
                         case "video" -> {
-                            var src = element.attr("src");
+                            var src  = element.attr("src");
                             var html = element.html();
                             yield Map.entry(URI.create(src), html);
                         }

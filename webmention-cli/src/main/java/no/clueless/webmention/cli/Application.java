@@ -35,15 +35,17 @@ public class Application {
                   -u,   --uri <uri>     The base URI to use
                   -d,   --dir <path>    The root directory to scan
                   -dr,  --dry-run       Show what would happen without sending
+                  -r,   --restrictive   Only send webmentions to targets from elements with the attribute "data-webmention"
                   -v,   --version       Show the version
                   -h,   --help          Show this help message
                 %n""", ARTIFACT_ID);
     }
 
     public static void main(String[] args) {
-        String uriStr = null;
-        String dirStr = null;
-        var    dryRun = false;
+        String uriStr      = null;
+        String dirStr      = null;
+        var    dryRun      = false;
+        var    restrictive = false;
 
         for (var i = 0; i < args.length; i++) {
             switch (args[i]) {
@@ -58,6 +60,7 @@ public class Application {
                     }
                 }
                 case "--dry-run", "-dr" -> dryRun = true;
+                case "--restrictive", "-r" -> restrictive = true;
                 case "--version", "-v" -> {
                     System.out.println(ARTIFACT_ID + " " + VERSION + " (" + BUILD_TIME + ")");
                     return;
@@ -84,7 +87,7 @@ public class Application {
             final var rootDir = Path.of(dirStr);
             final var baseUri = new URI(uriStr);
 
-            new WebmentionCli().findAndSendWebmentions(baseUri, rootDir, dryRun);
+            new WebmentionCli().findAndSendWebmentions(baseUri, rootDir, dryRun, restrictive);
         } catch (URISyntaxException e) {
             System.err.println("Invalid URI: " + uriStr);
             System.exit(1);

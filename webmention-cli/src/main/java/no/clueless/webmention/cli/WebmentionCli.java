@@ -8,6 +8,7 @@ import no.clueless.webmention.http.SecureHttpClient;
 import no.clueless.webmention.receiver.WebmentionHtmlSourceScanner;
 import no.clueless.webmention.sender.WebmentionEndpointNotFoundException;
 import no.clueless.webmention.sender.WebmentionSender;
+import org.jsoup.nodes.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,6 +19,7 @@ import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Predicate;
 
 public class WebmentionCli {
     private static final Logger                    log = LoggerFactory.getLogger(WebmentionCli.class);
@@ -35,11 +37,11 @@ public class WebmentionCli {
         this.webmentionSender = new WebmentionSender(httpClient, null, new WebmentionEndpointDiscoverer(httpClient));
     }
 
-    public Set<WebmentionEvent> findWebmentionEvents(URI baseUri, Path rootDir) throws IOException {
+    public Set<WebmentionEvent> findWebmentionEvents(URI baseUri, Path rootDir, Predicate<Element> elementFilter) throws IOException {
         Objects.requireNonNull(baseUri, "baseUri cannot be null");
         Objects.requireNonNull(rootDir, "rootDir cannot be null");
 
-        return webmentionDirectoryWalker.walk(baseUri, rootDir, new HashSet<>());
+        return webmentionDirectoryWalker.walk(baseUri, rootDir, elementFilter, new HashSet<>());
     }
 
     public void sendWebmention(WebmentionEvent webmentionEvent, boolean dryRun) {
@@ -67,11 +69,11 @@ public class WebmentionCli {
         });
     }
 
-    public void findAndSendWebmentions(URI baseUri, Path rootDir, boolean dryRun) throws IOException {
+    public void findAndSendWebmentions(URI baseUri, Path rootDir, boolean dryRun, boolean requireWebmentionDataAttribute) throws IOException {
         Objects.requireNonNull(baseUri, "baseUri cannot be null");
         Objects.requireNonNull(rootDir, "rootDir cannot be null");
 
-        var webmentionEvents = findWebmentionEvents(baseUri, rootDir);
+        var webmentionEvents = findWebmentionEvents(baseUri, rootDir, requireWebmentionDataAttribute ? (element) -> element.hasAttr("data-webmention") : (element) -> true);
         sendWebmentions(webmentionEvents, dryRun);
     }
 }
