@@ -28,7 +28,7 @@ class WebmentionHtmlSourceScannerTest {
         var sut = new WebmentionHtmlSourceScanner();
 
         // act
-        var result = sut.findAllMentions(body);
+        var result = sut.findAllMentions(body, null);
 
         // assert
         assertEquals(Map.of(URI.create("https://example.com"), "https://example.com", URI.create("https://example.com/hello-world.html"), "https://example.com/hello-world.html"), result);

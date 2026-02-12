@@ -44,7 +44,7 @@ public class WebmentionHtmlSourceScanner implements WebmentionSourceScanner {
         var document = Jsoup.parse(body);
         var elements = document.select("a[href], img[href], video[src]");
         return elements.stream()
-                .filter(elementFilter)
+                .filter(element -> elementFilter == null || elementFilter.test(element))
                 .map(element -> {
                     var tagName = element.tagName().toLowerCase();
                     return switch (tagName) {

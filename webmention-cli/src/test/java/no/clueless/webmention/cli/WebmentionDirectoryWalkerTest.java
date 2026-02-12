@@ -35,7 +35,7 @@ class WebmentionDirectoryWalkerTest {
                 """);
 
         // act
-        var result = sut.walk(URI.create("https://example.com"), tempDir, new HashSet<>());
+        var result = sut.walk(URI.create("https://example.com"), tempDir, null, new HashSet<>());
 
         // assert
         assertEquals(Set.of(
