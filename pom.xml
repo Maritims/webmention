@@ -198,53 +198,6 @@
                     </excludeArtifacts>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.jreleaser</groupId>
-                <artifactId>jreleaser-maven-plugin</artifactId>
-                <version>1.22.0</version>
-                <inherited>false</inherited>
-                <configuration>
-                    <jreleaser>
-                        <signing>
-                            <active>ALWAYS</active>
-                            <pgp>
-                                <armored>true</armored>
-                                <mode>COMMAND</mode>
-                            </pgp>
-                        </signing>
-                        <project>
-                            <name>webmention-cli</name>
-                            <copyright>2026 Martin Severin Steffensen</copyright>
-                            <snapshot>
-                                <enabled>false</enabled>
-                            </snapshot>
-                        </project>
-                        <release>
-                            <github>
-                                <owner>Maritims</owner>
-                                <name>webmention</name>
-                                <releaseName>${project.artifactId}-${env.WEBMENTION_LATEST_VERSION}</releaseName>
-                                <sign>true</sign>
-                                <skipTag>true</skipTag>
-                                <tagName>${project.artifactId}-${env.WEBMENTION_LATEST_VERSION}</tagName>
-                                <update>
-                                    <enabled>true</enabled>
-                                </update>
-                            </github>
-                        </release>
-                        <distributions>
-                            <webmention>
-                                <type>BINARY</type>
-                                <artifacts>
-                                    <artifact>
-                                        <path>webmention-cli/target/webmention-cli</path>
-                                    </artifact>
-                                </artifacts>
-                            </webmention>
-                        </distributions>
-                    </jreleaser>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
 
