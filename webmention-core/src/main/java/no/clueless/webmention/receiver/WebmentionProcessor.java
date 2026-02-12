@@ -1,5 +1,6 @@
 package no.clueless.webmention.receiver;
 
+import no.clueless.webmention.UnexpectedStatusCodeException;
 import no.clueless.webmention.WebmentionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,8 +62,10 @@ public class WebmentionProcessor {
 
             log.info("Processing queued mention: {} -> {}", task.sourceUrl(), task.targetUrl());
             webmentionReceiver.receive(task.sourceUrl(), task.targetUrl());
+        } catch (UnexpectedStatusCodeException e) {
+            log.warn("Failed to process mention: {}", e.getMessage());
         } catch (WebmentionException e) {
-            log.error("Failed to process mention", e);
+            log.error("Failed to process mention: {}", e.getMessage());
         } catch (Throwable t) {
             log.error("Unexpected error in thread. Scheduler is still alive", t);
         }
