@@ -91,12 +91,17 @@ export class WebmentionSend extends HTMLElement {
         this.innerHTML = `
         <form method="POST" action="${this._endpoint}">
             ${this._descriptiveText}
-            <input type="hidden" name="target" value="${window.location.href}">
+            <input type="hidden" name="target" value="">
             <label for="source">URL:</label>
             <input type="url" name="source" id="source" required>
             <button type="submit">Send Webmention</button>
         </form>
         `;
+
+        const targetInput = this.querySelector('input[name="target"]');
+        if (targetInput) {
+            targetInput.value = window.location.href;
+        }
 
         this.querySelector('form').addEventListener('submit', async (event) => {
             event.preventDefault();
