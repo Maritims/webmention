@@ -14,6 +14,7 @@ This is a Java implementation of the [Webmention specification](https://www.w3.o
 - [webmention-javalin](#webmention-javalin): A Javalin plugin for receiving webmentions.
 - [webmention-service](#webmention-service): A microservice using Javalin and the webmention-javalin plugin to receive
   webmentions.
+- [webmention-web-components](webmention-web-components/README.md): Web components for displaying webmentions.
 
 ## Security measures
 

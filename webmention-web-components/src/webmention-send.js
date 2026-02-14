@@ -64,7 +64,7 @@ export class WebmentionSend extends HTMLElement {
     }
 
     static get observedAttributes() {
-        return ['target'];
+        return ['endpoint', 'target'];
     }
 
     attributeChangedCallback(name, oldValue, newValue) {

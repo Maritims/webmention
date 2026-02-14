@@ -1,16 +1,16 @@
 {
     "name": "webmention-web-components",
-    "version": "0.0.1-alpha.3",
+    "version": "0.0.1-alpha.5",
     "description": "Web components for presenting webmentions.",
-    "main": "./index.js",
+    "main": "./dist/webmention-web-components.js",
     "type": "module",
     "files": [
-        "src",
-        "LICENSE",
-        "README.md"
+        "dist/webmention-web-components.js",
+        "src/LICENSE",
+        "src/README.md"
     ],
     "exports": {
-        ".": "./index.js",
+        ".": "./src/webmention-web-components.js",
         "./list": "./src/webmention-list.js"
     },
     "keywords": [
@@ -19,10 +19,20 @@
         "web-components",
         "custom-elements"
     ],
-    "author": "Martin Severin Steffensen <martin.severin.steffensen@proton.me> (https://clueless.no/)",
+    "author": {
+        "name": "Martin Severin Steffensen",
+        "email": "martin.severin.steffensen@proton.me",
+        "url": "https://clueless.no/"
+    },
     "license": "MIT",
     "repository": {
         "type": "git",
         "url": "git+https://github.com/Maritims/webmention.git"
+    },
+    "scripts": {
+        "build": "esbuild src/webmention-web-components.js --bundle --outfile=dist/webmention-web-components.js --minify --banner:js=\"/* ${npm_package_name} v${npm_package_version} */\""
+    },
+    "devDependencies": {
+        "esbuild": "^0.27.3"
     }
 }
