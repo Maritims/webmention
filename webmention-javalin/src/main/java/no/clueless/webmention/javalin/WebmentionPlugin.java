@@ -9,6 +9,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -42,7 +43,24 @@ public class WebmentionPlugin extends Plugin<WebmentionConfig> {
                             </body>
                         </html>
                         """));
+
                 router.get("/test-target-page", ctx -> ctx.status(200).header("Link", "</webmention-endpoint>; rel=webmention").contentType(ContentType.TEXT_HTML));
+
+                if (pluginConfig.getTestPages() != null)
+                    pluginConfig.getTestPages().forEach(page -> {
+                        log.info("Test page {} will be available", page);
+                        try (var is = getClass().getClassLoader().getResourceAsStream(page)) {
+                            if (is == null) {
+                                throw new RuntimeException("Test page " + page + " not found");
+                            }
+
+                            log.info("Test page {} found", page);
+                            var html = new String(is.readAllBytes());
+                            router.get("/" + page, ctx -> ctx.status(200).contentType(ContentType.TEXT_HTML).html(html));
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
             }
 
             // The specification dictates the parameters are named "source" and "target".

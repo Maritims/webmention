@@ -29,6 +29,7 @@ public class Application {
         final var supportedDomains   = Optional.ofNullable(System.getenv("WEBMENTION_SUPPORTED_DOMAINS")).map(value -> new HashSet<>(Arrays.asList(value.split(",")))).orElseThrow(() -> new IllegalStateException("WEBMENTION_SUPPORTED_DOMAINS must be set"));
         final var testMode           = Optional.ofNullable(System.getenv("WEBMENTION_TEST_MODE")).map("true"::equalsIgnoreCase).orElse(false);
         final var connectTimeout     = Optional.ofNullable(System.getenv("WEBMENTION_CONNECTION_TIMEOUT_IN_MILLISECONDS")).map(Long::parseLong).map(Duration::ofMillis).orElse(Duration.ofMillis(5000));
+        final var testPages          = Optional.ofNullable(System.getenv("WEBMENTION_TEST_PAGES")).map(value -> new HashSet<>(Arrays.asList(value.split(",")))).orElse(new HashSet<>());
 
         final var httpClient                   = SecureHttpClient.newClient(connectTimeout, !testMode);
         final var webmentionEndpointDiscoverer = WebmentionEndpointDiscoverer.newBuilder().httpClient(httpClient).build();
@@ -55,6 +56,7 @@ public class Application {
                 plugin.setSender(webmentionSender);
                 plugin.setWebmentionRepository(webmentionRepository);
                 plugin.setTestMode(testMode);
+                plugin.setTestPages(testPages);
             }));
         });
 

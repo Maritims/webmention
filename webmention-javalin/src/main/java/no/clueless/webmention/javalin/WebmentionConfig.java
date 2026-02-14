@@ -4,12 +4,15 @@ import no.clueless.webmention.persistence.WebmentionRepository;
 import no.clueless.webmention.receiver.WebmentionProcessor;
 import no.clueless.webmention.sender.WebmentionSender;
 
+import java.util.Set;
+
 public class WebmentionConfig {
     private String                  endpoint;
     private WebmentionProcessor     webmentionProcessor;
     private WebmentionSender        sender;
     private WebmentionRepository<?> webmentionRepository;
     private boolean                 testMode;
+    private Set<String>             testPages;
 
     public String getEndpoint() {
         return endpoint;
@@ -49,5 +52,13 @@ public class WebmentionConfig {
 
     public void setTestMode(boolean testMode) {
         this.testMode = testMode;
+    }
+
+    public Set<String> getTestPages() {
+        return testPages;
+    }
+
+    public void setTestPages(Set<String> testPages) {
+        this.testPages = testPages;
     }
 }

@@ -37,7 +37,7 @@ public class WebmentionEmailViaResendNotifier implements WebmentionNotifier<Webm
         var body = String.format("""
                         <h1>New webmention</h1>
                         <p><b>Source URL:</b> <a href="%s">%s</a></p>
-                        <p><b>Target URL:</b> <a href="%s">%s</a>/p>
+                        <p><b>Target URL:</b> <a href="%s">%s</a></p>
                         """, sourceUrl, sourceUrl, targetUrl, targetUrl);
         if (mentionText != null && !mentionText.isBlank()) {
             body += String.format("""
