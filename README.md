@@ -125,7 +125,7 @@ The service is a simple Javalin application that receives webmentions and stores
 container and should be deployed behind a reverse proxy which handles SSL termination and rate limiting. You don't want
 to be turned into a DDoS zombie. I like [nginx](https://nginx.org/).
 
-For the easiest deployment, head over to [Docker Hub](https://hub.docker.com/repository/docker/maritim/webmention-service/general) and spin up a container using [the instructions in the repository overview](https://hub.docker.com/repository/docker/maritim/webmention-service/general#webmention-service).
+For the easiest deployment, head over to [Docker Hub](https://hub.docker.com/r/maritim/webmention-service) and spin up a container using [the instructions in the repository overview](https://hub.docker.com/r/maritim/webmention-service#how-to-run-a-container-using-this-image).
 
 The service accepts the following environment variables:
 
