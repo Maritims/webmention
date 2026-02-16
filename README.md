@@ -140,3 +140,5 @@ The service accepts the following environment variables:
 - `WEBMENTION_CONNECTION_TIMEOUT_IN_MILLISECONDS`: The timeout for establishing a connection to target URLs and
   webmention endpoints. Defaults to 5000 milliseconds.
 - `WEBMENTION_RESEND_API_KEY`: An API key for the [Resend](https://resend.com/) service. This is currently the only supported way to send e-mail messages.
+- `WEBMENTION_SENDER_EMAIL_ADDRESS`: The e-mail address to use when sending e-mails. Typically, a no-reply e-mail address used for sending notifications about pending webmentions.
+- `WEBMENTION_RECIPIENT_EMAIL_ADDRESS`: The e-mail address which should receive e-mails about pending webmentions.
