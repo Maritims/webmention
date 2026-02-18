@@ -2,109 +2,29 @@ package no.clueless.webmention.persistence.sqlite;
 
 import no.clueless.webmention.persistence.Webmention;
 import no.clueless.webmention.persistence.WebmentionRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
+import java.sql.*;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SqliteWebmentionRepository implements WebmentionRepository<Integer> {
-    private static final Logger log = LoggerFactory.getLogger(SqliteWebmentionRepository.class);
-    private final        String connectionString;
-
+public class SqliteWebmentionRepository extends SqliteBaseRepository<Webmention> implements WebmentionRepository {
     public SqliteWebmentionRepository(String connectionString) {
-        if (connectionString == null || connectionString.isBlank()) {
-            throw new IllegalArgumentException("connectionString cannot be null or empty");
-        }
-        this.connectionString = connectionString;
-    }
-
-    /**
-     * Extracts the last part of the connection string, which is the path to the database file.
-     *
-     * @param connectionString The connection string.
-     * @return The path to the database file.
-     */
-    static Path extractAbsoluteDatabasePath(String connectionString) {
-        if (connectionString == null || connectionString.isBlank()) {
-            throw new IllegalArgumentException("connectionString cannot be null or empty");
-        }
-        if (!connectionString.startsWith("jdbc:sqlite:")) {
-            throw new IllegalArgumentException("connectionString must start with jdbc:sqlite:, but was " + connectionString);
-        }
-
-        var rawPath     = connectionString.replaceFirst("^(jdbc:)?sqlite:", "");
-        var decodedPath = URLDecoder.decode(rawPath, StandardCharsets.UTF_8);
-        return Paths.get(decodedPath).normalize();
-    }
-
-    /**
-     * Verify that the database directory path exists and is writable.
-     *
-     * @param databaseFilePath The path to the database file. Cannot be null nor a directory.
-     * @return True if the database directory path exists and is writable.
-     * @throws IllegalArgumentException If the database file path is null, does not end with .db or is a directory.
-     */
-    static boolean verifyDatabasePath(Path databaseFilePath) {
-        if (databaseFilePath == null) {
-            throw new IllegalArgumentException("databasePath cannot be null");
-        }
-        if (!databaseFilePath.toString().endsWith(".db")) {
-            throw new IllegalArgumentException("databasePath must end with .db, but was " + databaseFilePath);
-        }
-        if (Files.isDirectory(databaseFilePath)) {
-            throw new IllegalArgumentException("databasePath must be a file, but was a directory: " + databaseFilePath);
-        }
-
-        var databaseDirPath = databaseFilePath.toAbsolutePath().getParent();
-        if (!Files.exists(databaseDirPath)) {
-            throw new IllegalArgumentException("Database directory does not exist: " + databaseDirPath);
-        }
-        if (!databaseDirPath.toFile().canWrite()) {
-            throw new IllegalArgumentException("Cannot write to database directory " + databaseDirPath);
-        }
-
-        return true;
+        super(connectionString, """
+                CREATE TABLE IF NOT EXISTS webmentions (
+                     id INTEGER PRIMARY KEY AUTOINCREMENT,
+                     isApproved BOOLEAN NOT NULL DEFAULT FALSE,
+                     sourceUrl TEXT NOT NULL,
+                     targetUrl TEXT NOT NULL,
+                     mentionText TEXT,
+                     created DATETIME DEFAULT CURRENT_TIMESTAMP,
+                     updated DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+                """);
     }
 
     @Override
-    public WebmentionRepository<Integer> initialize() {
-        if (!verifyDatabasePath(extractAbsoluteDatabasePath(connectionString))) {
-            throw new RuntimeException("Database path did not pass verification. The connection string must be of the form jdbc:sqlite:path/to/database.db, but was " + connectionString);
-        }
-
-        try (var connection = DriverManager.getConnection(connectionString);
-             var statement = connection.createStatement()) {
-            statement.execute("""
-                    CREATE TABLE IF NOT EXISTS webmentions (
-                         id INTEGER PRIMARY KEY AUTOINCREMENT,
-                         isApproved BOOLEAN NOT NULL DEFAULT FALSE,
-                         sourceUrl TEXT NOT NULL,
-                         targetUrl TEXT NOT NULL,
-                         mentionText TEXT,
-                         created DATETIME DEFAULT CURRENT_TIMESTAMP,
-                         updated DATETIME DEFAULT CURRENT_TIMESTAMP
-                    )
-                    """);
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to setup database", e);
-        }
-
-        return this;
-    }
-
-    Webmention mapFromResultSet(ResultSet resultSet) throws SQLException {
+    protected Webmention mapFromResultSet(ResultSet resultSet) throws SQLException {
         var id          = resultSet.getInt("id");
         var isApproved  = resultSet.getBoolean("isApproved");
         var sourceUrl   = resultSet.getString("sourceUrl");
@@ -115,16 +35,50 @@ public class SqliteWebmentionRepository implements WebmentionRepository<Integer>
         return new Webmention(id, isApproved, sourceUrl, targetUrl, mentionText, created, updated);
     }
 
-    public Webmention getWebmentionById(Integer id) {
-        try (var connection = DriverManager.getConnection(connectionString)) {
-            var sql       = "SELECT id, isApproved, sourceUrl, targetURl, mentionText, created, updated FROM webmentions WHERE id = ?";
-            var statement = connection.prepareStatement(sql);
-            statement.setInt(1, id);
-            var resultSet = statement.executeQuery();
-            return resultSet.next() ? mapFromResultSet(resultSet) : null;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to connect to database", e);
+    @Override
+    protected PreparedStatement prepareCountStatement(Connection connection) throws SQLException {
+        return connection.prepareStatement("SELECT COUNT(*) FROM webmentions");
+    }
+
+    @Override
+    protected PreparedStatement prepareFindByIdStatement(Connection connection, Integer id) throws SQLException {
+        var preparedStatement = connection.prepareStatement("SELECT id, isApproved, sourceUrl, targetUrl, mentionText, created, updated FROM webmentions WHERE id = ?");
+        preparedStatement.setInt(1, id);
+        return preparedStatement;
+    }
+
+    @Override
+    protected PreparedStatement prepareCreateStatement(Connection connection, Webmention webmention) throws SQLException {
+        if (connection == null) {
+            throw new IllegalArgumentException("connection cannot be null");
         }
+        if (webmention == null) {
+            throw new IllegalArgumentException("webmention cannot be null");
+        }
+
+        var preparedStatement = connection.prepareStatement("INSERT INTO webmentions(isApproved, sourceUrl, targetUrl, mentionText) VALUES(?, ?, ?, ?)");
+        preparedStatement.setBoolean(1, webmention.isApproved());
+        preparedStatement.setString(2, webmention.sourceUrl());
+        preparedStatement.setString(3, webmention.targetUrl());
+        preparedStatement.setString(4, webmention.mentionText());
+        return preparedStatement;
+    }
+
+    @Override
+    protected PreparedStatement prepareUpdateStatement(Connection connection, Webmention webmention) throws SQLException {
+        if (connection == null) {
+            throw new IllegalArgumentException("connection cannot be null");
+        }
+        if (webmention == null) {
+            throw new IllegalArgumentException("webmention cannot be null");
+        }
+
+        var preparedStatement = connection.prepareStatement("UPDATE webmentions SET isApproved = ?, mentionText = ?, updated = ? WHERE id = ?");
+        preparedStatement.setBoolean(1, webmention.isApproved());
+        preparedStatement.setString(2, webmention.mentionText());
+        preparedStatement.setTimestamp(3, Timestamp.from(webmention.updated().atZone(ZoneId.systemDefault()).toInstant()));
+        preparedStatement.setInt(4, webmention.id());
+        return preparedStatement;
     }
 
     @Override
@@ -191,61 +145,5 @@ public class SqliteWebmentionRepository implements WebmentionRepository<Integer>
         }
 
         return webmentions;
-    }
-
-    public Webmention createWebmention(Webmention webmention) {
-        if (webmention == null) {
-            throw new IllegalArgumentException("webmention cannot be null");
-        }
-
-        try (var connection = DriverManager.getConnection(connectionString)) {
-            var sql       = "INSERT INTO webmentions(isApproved, sourceUrl, targetUrl, mentionText) VALUES(?, ?, ?, ?)";
-            var statement = connection.prepareStatement(sql);
-            statement.setBoolean(1, webmention.isApproved());
-            statement.setString(2, webmention.sourceUrl());
-            statement.setString(3, webmention.targetUrl());
-            statement.setString(4, webmention.mentionText());
-            statement.executeUpdate();
-
-            var id = statement.getGeneratedKeys().getInt(1);
-            return getWebmentionById(id);
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to connect to database", e);
-        }
-    }
-
-    @Override
-    public Webmention updateWebmention(Webmention webmention) {
-        if (webmention == null) {
-            throw new IllegalArgumentException("webmention cannot be null");
-        }
-
-        try (var connection = DriverManager.getConnection(connectionString)) {
-            var sql       = "UPDATE webmentions SET isApproved = ?, mentionText = ?, updated = ? WHERE id = ?";
-            var statement = connection.prepareStatement(sql);
-            statement.setBoolean(1, webmention.isApproved());
-            statement.setString(2, webmention.mentionText());
-            statement.setTimestamp(3, Timestamp.from(webmention.updated().atZone(ZoneId.systemDefault()).toInstant()));
-            statement.setInt(4, webmention.id());
-            statement.executeUpdate();
-
-            return getWebmentionById(webmention.id());
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to connect to database", e);
-        }
-    }
-
-    @Override
-    public Webmention upsertWebmention(Webmention webmention) {
-        var existingWebmention = getWebmentionBySourceUrl(webmention.sourceUrl());
-        if (existingWebmention == null) {
-            log.debug("Creating webmention: {} -> {}", webmention.sourceUrl(), webmention.targetUrl());
-            var newWebmention = Webmention.newWebmention(webmention.sourceUrl(), webmention.targetUrl(), webmention.mentionText());
-            return createWebmention(newWebmention);
-        } else {
-            log.info("Updating webmention with ID {}: {} -> {}", existingWebmention.id(), existingWebmention.sourceUrl(), existingWebmention.targetUrl());
-            existingWebmention = existingWebmention.update(existingWebmention.isApproved(), webmention.mentionText(), LocalDateTime.now());
-            return updateWebmention(existingWebmention);
-        }
     }
 }

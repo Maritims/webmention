@@ -12,10 +12,16 @@ import java.util.concurrent.Flow;
 
 public class WebmentionReceivedSubscriber<TNotification extends WebmentionNotification> implements Flow.Subscriber<WebmentionEvent> {
     private static final Logger                            log = LoggerFactory.getLogger(WebmentionReceivedSubscriber.class);
-    private final        WebmentionRepository<?>           webmentionRepository;
+    private final        WebmentionRepository              webmentionRepository;
     private final        WebmentionNotifier<TNotification> webmentionNotifier;
 
-    public WebmentionReceivedSubscriber(WebmentionRepository<?> webmentionRepository, WebmentionNotifier<TNotification> webmentionNotifier) {
+    public WebmentionReceivedSubscriber(WebmentionRepository webmentionRepository, WebmentionNotifier<TNotification> webmentionNotifier) {
+        if(webmentionRepository == null) {
+            throw new IllegalArgumentException("webmentionRepository cannot be null");
+        }
+        if(webmentionNotifier == null) {
+            throw new IllegalArgumentException("webmentionNotifier cannot be null");
+        }
         this.webmentionRepository = webmentionRepository;
         this.webmentionNotifier   = webmentionNotifier;
     }
@@ -28,7 +34,12 @@ public class WebmentionReceivedSubscriber<TNotification extends WebmentionNotifi
     @Override
     public void onNext(WebmentionEvent item) {
         var webmention = Webmention.newWebmention(item.sourceUrl(), item.targetUrl(), item.mentionText());
-        webmentionRepository.upsertWebmention(webmention);
+        webmentionRepository.upsert(
+                webmention,
+                entity -> webmentionRepository.getWebmentionBySourceUrl(item.sourceUrl()),
+                entity -> Webmention.newWebmention(item.sourceUrl(), item.targetUrl(), item.mentionText()),
+                (entityToUpdate, entityWithChanges) -> (Webmention) entityToUpdate.update(entityWithChanges)
+        );
         var notification = webmentionNotifier.newNotification(item.sourceUrl(), item.targetUrl(), item.mentionText());
         webmentionNotifier.notify(notification);
     }

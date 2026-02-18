@@ -3,7 +3,7 @@ package no.clueless.webmention.persistence;
 import java.time.LocalDateTime;
 
 public record Webmention(Integer id, boolean isApproved, String sourceUrl, String targetUrl, String mentionText,
-                         LocalDateTime created, LocalDateTime updated) {
+                         LocalDateTime created, LocalDateTime updated) implements Entity<Integer> {
     public Webmention {
         if (sourceUrl == null || sourceUrl.isBlank()) {
             throw new IllegalArgumentException("sourceUrl cannot be null or blank");
@@ -15,6 +15,12 @@ public record Webmention(Integer id, boolean isApproved, String sourceUrl, Strin
 
     public Webmention update(boolean isApproved, String mentionText, LocalDateTime updated) {
         return new Webmention(id, isApproved, sourceUrl, targetUrl, mentionText, created, updated);
+    }
+
+    @Override
+    public Entity<Integer> update(Entity<Integer> entity) {
+        var webmention = (Webmention) entity;
+        return update(webmention.isApproved, webmention.mentionText, webmention.updated);
     }
 
     public static Webmention newWebmention(String sourceUrl, String targetUrl, String mentionText) {

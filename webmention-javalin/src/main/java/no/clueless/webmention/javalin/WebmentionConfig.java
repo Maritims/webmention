@@ -7,12 +7,12 @@ import no.clueless.webmention.sender.WebmentionSender;
 import java.util.Set;
 
 public class WebmentionConfig {
-    private String                  endpoint;
-    private WebmentionProcessor     webmentionProcessor;
-    private WebmentionSender        sender;
-    private WebmentionRepository<?> webmentionRepository;
-    private boolean                 testMode;
-    private Set<String>             testPages;
+    private String               endpoint;
+    private WebmentionProcessor  webmentionProcessor;
+    private WebmentionSender     sender;
+    private WebmentionRepository webmentionRepository;
+    private boolean              testMode;
+    private Set<String>          testPages;
 
     public String getEndpoint() {
         return endpoint;
@@ -38,11 +38,11 @@ public class WebmentionConfig {
         this.sender = sender;
     }
 
-    public WebmentionRepository<?> getWebmentionRepository() {
+    public WebmentionRepository getWebmentionRepository() {
         return webmentionRepository;
     }
 
-    public void setWebmentionRepository(WebmentionRepository<?> webmentionRepository) {
+    public void setWebmentionRepository(WebmentionRepository webmentionRepository) {
         this.webmentionRepository = webmentionRepository;
     }
 

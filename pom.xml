@@ -53,6 +53,8 @@
         <!-- Required by Javalin for serialization and deserialization -->
         <jackson.version>2.17.2</jackson.version>
         <commons-text.version>1.15.0</commons-text.version>
+        <java-jwt.version>4.4.0</java-jwt.version>
+        <jbcrypt.version>0.4</jbcrypt.version>
         <native.maven.plugin.version>0.11.4</native.maven.plugin.version>
         <jreleaser.skip>true</jreleaser.skip>
     </properties>
@@ -103,6 +105,16 @@
                 <groupId>ch.qos.logback</groupId>
                 <artifactId>logback-classic</artifactId>
                 <version>${logback.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.auth0</groupId>
+                <artifactId>java-jwt</artifactId>
+                <version>${java-jwt.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mindrot</groupId>
+                <artifactId>jbcrypt</artifactId>
+                <version>${jbcrypt.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
