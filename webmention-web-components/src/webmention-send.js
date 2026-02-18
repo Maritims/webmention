@@ -64,7 +64,7 @@ export class WebmentionSend extends HTMLElement {
     }
 
     static get observedAttributes() {
-        return ['endpoint', 'target'];
+        return ['endpoint', 'targetUrl', 'descriptive-text'];
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
@@ -82,7 +82,7 @@ export class WebmentionSend extends HTMLElement {
 
     connectedCallback() {
         this._endpoint = this.getAttribute('endpoint');
-        this._descriptiveText = this.innerHTML;
+        this._descriptiveText = this.getAttribute('descriptive-text') || '';
 
         this.render();
     }
@@ -90,7 +90,7 @@ export class WebmentionSend extends HTMLElement {
     render() {
         this.innerHTML = `
         <form method="POST" action="${this._endpoint}">
-            ${this._descriptiveText}
+            ${this._descriptiveText ? `<p>${this._descriptiveText}</p>` : ''}
             <input type="hidden" name="target" value="">
             <label for="source">URL:</label>
             <input type="url" name="source" id="source" required>

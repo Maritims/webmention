@@ -1,7 +1,7 @@
 /**
  * @typedef {object} Webmention
- * @property {string} target The target URL of the webmention.
- * @property {string} source The source URL of the webmention.
+ * @property {string} targetUrl The target URL of the webmention.
+ * @property {string} sourceUrl The source URL of the webmention.
  * @property {string} mentionText The text of the webmention.
  */
 

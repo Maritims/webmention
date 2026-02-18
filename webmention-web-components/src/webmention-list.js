@@ -98,7 +98,7 @@ export class WebmentionList extends HTMLElement {
                 <h2>${this.#escapeHtml(this._heading)}</h2>
                 <ul>${this._webmentions.map(webmention => `
                     <li>
-                        <a href="${this.#sanitizeUrl(webmention.target)}">${this.#escapeHtml(webmention.mentionText)}</a> (from: <a href="${this.#sanitizeUrl(webmention.source)}">${this.#escapeHtml(webmention.source)})</a>
+                        <a href="${this.#sanitizeUrl(webmention.targetUrl)}">${this.#escapeHtml(webmention.mentionText)}</a> (from: <a href="${this.#sanitizeUrl(webmention.sourceUrl)}">${this.#escapeHtml(webmention.sourceUrl)})</a>
                     </li>
                 `).join('')}                
                 </ul>
