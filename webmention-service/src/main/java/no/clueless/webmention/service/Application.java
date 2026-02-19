@@ -1,22 +1,23 @@
 package no.clueless.webmention.service;
 
+import com.auth0.jwt.algorithms.Algorithm;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.javalin.Javalin;
 import io.javalin.json.JavalinJackson;
+import no.clueless.oauth.DefaultJwtGenerator;
+import no.clueless.oauth.OAuthServerPlugin;
 import no.clueless.webmention.WebmentionEndpointDiscoverer;
 import no.clueless.webmention.event.WebmentionEvent;
 import no.clueless.webmention.event.WebmentionReceivedSubscriber;
 import no.clueless.webmention.http.SecureHttpClient;
-import no.clueless.webmention.javalin.OAuth2Plugin;
 import no.clueless.webmention.notifier.email.WebmentionEmailViaResendNotifier;
 import no.clueless.webmention.persistence.WebmentionRepository;
-import no.clueless.webmention.persistence.sqlite.SqliteClientRepository;
+import no.clueless.webmention.persistence.sqlite.SqlClientStore;
 import no.clueless.webmention.persistence.sqlite.SqliteWebmentionRepository;
 import no.clueless.webmention.receiver.*;
 import no.clueless.webmention.javalin.WebmentionPlugin;
-import no.clueless.webmention.security.ClientService;
 import no.clueless.webmention.sender.WebmentionSender;
 
 import java.time.Duration;
@@ -35,7 +36,6 @@ public class Application {
         final var connectTimeout             = Optional.ofNullable(System.getenv("WEBMENTION_CONNECTION_TIMEOUT_IN_MILLISECONDS")).map(Long::parseLong).map(Duration::ofMillis).orElse(Duration.ofMillis(5000));
         final var testPages                  = Optional.ofNullable(System.getenv("WEBMENTION_TEST_PAGES")).map(value -> new HashSet<>(Arrays.asList(value.split(",")))).orElse(new HashSet<>());
         final var issuer                     = Optional.ofNullable(System.getenv("WEBMENTION_ISSUER")).orElseThrow(() -> new IllegalStateException("WEBMENTION_ISSUER must be set"));
-        final var audience                   = Optional.ofNullable(System.getenv("WEBMENTION_AUDIENCE")).orElseThrow(() -> new IllegalStateException("WEBMENTION_AUDIENCE must be set"));
         final var jwtSecret                  = Optional.ofNullable(System.getenv("WEBMENTION_JWT_SECRET")).orElseThrow(() -> new IllegalStateException("WEBMENTION_JWT_SECRET must be set"));
         final var accessTokenValiditySeconds = Optional.ofNullable(System.getenv("WEBMENTION_ACCESS_TOKEN_VALIDITY_SECONDS")).map(Integer::parseInt).orElse(3600);
 
@@ -48,8 +48,6 @@ public class Application {
         final var webmentionProcessor          = WebmentionProcessor.newBuilder().rateLimiter(WebmentionRateLimiter.newBuilder().maxEntries(5000).cooldownMillis(5).build()).receiver(receiver).build();
         final var webmentionSender             = WebmentionSender.newBuilder().httpClient(httpClient).submissionPublisher(new SubmissionPublisher<>()).endpointDiscoverer(webmentionEndpointDiscoverer).build();
         final var webmentionNotifier           = new WebmentionEmailViaResendNotifier();
-        final var clientRepository             = new SqliteClientRepository(connectionString);
-        final var clientService                = new ClientService(clientRepository);
 
         onWebmentionReceived.subscribe(new WebmentionReceivedSubscriber<>((WebmentionRepository) webmentionRepository, webmentionNotifier));
         webmentionProcessor.start();
@@ -60,12 +58,10 @@ public class Application {
                     .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false), true
             ));
 
-            config.registerPlugin(new OAuth2Plugin(plugin -> {
-                plugin.setIssuer(issuer);
-                plugin.setAccessTokenValiditySeconds(accessTokenValiditySeconds);
-                plugin.setJwtSecret(jwtSecret);
-                plugin.setClientRepository(clientRepository);
-                plugin.setClientService(clientService);
+            config.registerPlugin(new OAuthServerPlugin(oauth -> {
+                oauth.tokenPath      = "/oauth/token";
+                oauth.tokenGenerator = new DefaultJwtGenerator(Algorithm.HMAC256(jwtSecret), issuer, accessTokenValiditySeconds);
+                oauth.clientStore    = new SqlClientStore(connectionString).initialize();
             }));
 
             config.registerPlugin(new WebmentionPlugin(plugin -> {

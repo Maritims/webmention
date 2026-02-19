@@ -11,6 +11,7 @@
         <module>webmention-javalin</module>
         <module>webmention-service</module>
         <module>webmention-cli</module>
+        <module>oauth2-javalin</module>
     </modules>
 
     <name>Webmention Parent</name>
@@ -65,6 +66,12 @@
                 <groupId>io.javalin</groupId>
                 <artifactId>javalin</artifactId>
                 <version>${javalin.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.javalin</groupId>
+                <artifactId>javalin-testtools</artifactId>
+                <version>${javalin.version}</version>
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.xerial</groupId>
