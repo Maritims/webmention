@@ -3,9 +3,12 @@ package no.clueless.webmention.persistence.sqlite;
 import no.clueless.oauth.ClientStore;
 import no.clueless.oauth.OAuthClient;
 import no.clueless.oauth.Scope;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.*;
+import java.util.Arrays;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static no.clueless.webmention.persistence.sqlite.SqliteDatabasePathVerifier.extractAbsoluteDatabasePath;
 import static no.clueless.webmention.persistence.sqlite.SqliteDatabasePathVerifier.verifyDatabasePath;
@@ -60,8 +63,9 @@ public class SqliteClientStore implements ClientStore {
 
             if (resultSet.next()) {
                 var clientSecret = resultSet.getString("clientSecret");
+                var scopes       = Arrays.stream(resultSet.getString("scopes").split(",")).collect(Collectors.toSet());
                 var isEnabled    = resultSet.getBoolean("isEnabled");
-                return new OAuthClient(clientId, clientSecret, null, isEnabled);
+                return new OAuthClient(clientId, clientSecret, scopes, isEnabled);
             } else {
                 return null;
             }
@@ -82,7 +86,7 @@ public class SqliteClientStore implements ClientStore {
         try (var connection = DriverManager.getConnection(connectionString)) {
             var statement = connection.prepareStatement("INSERT INTO clients (clientId, clientSecret, isEnabled, scopes) VALUES(?, ?, ?, ?);");
             statement.setString(1, clientId);
-            statement.setString(2, clientSecret);
+            statement.setString(2, BCrypt.hashpw(clientSecret, BCrypt.gensalt()));
             statement.setBoolean(3, true);
             statement.setString(4, String.join(",", scopes.stream().map(Scope::getLabel).toList()));
             statement.executeUpdate();

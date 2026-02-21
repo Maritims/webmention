@@ -67,7 +67,7 @@ public class Application {
             }));
 
             config.registerPlugin(new OAuthResourceServerPlugin<DecodedJWT>(oauth -> {
-                oauth.scopeExtractor = null;
+                oauth.scopeExtractor = defaultJwtManager;
                 oauth.tokenValidator = defaultJwtManager;
             }));
 

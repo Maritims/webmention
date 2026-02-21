@@ -23,7 +23,7 @@ class OAuthServerPluginTest {
 
         var app = Javalin.create(config -> config.registerPlugin(new OAuthServerPlugin(oauth -> {
             oauth.clientStore    = clientStore;
-            oauth.tokenGenerator = client -> "fake-jwt";
+            oauth.tokenGenerator = (client, scopes) -> "fake-jwt";
         })));
 
         JavalinTest.test(app, (server, httpClient) -> {

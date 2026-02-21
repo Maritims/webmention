@@ -9,10 +9,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -109,7 +106,7 @@ public class OAuthServerPlugin extends Plugin<OAuthServerPlugin.Config> {
             Set<Scope> finalScopes;
             var        scopeParameter = ctx.formParam("scope");
             if (scopeParameter == null || scopeParameter.isBlank()) {
-                finalScopes = client.scopes().stream().map(Scope::fromLabel).flatMap(Optional::stream).collect(Collectors.toSet());
+                finalScopes = client.scopes() == null ? Collections.emptySet() : client.scopes().stream().map(Scope::fromLabel).flatMap(Optional::stream).collect(Collectors.toSet());
             } else {
                 var requestedLabels = Arrays.stream(scopeParameter.split("\\s+")).collect(Collectors.toSet());
                 finalScopes = requestedLabels.stream()

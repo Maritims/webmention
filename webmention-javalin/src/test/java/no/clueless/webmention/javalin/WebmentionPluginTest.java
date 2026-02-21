@@ -27,8 +27,8 @@ class WebmentionPluginTest {
         var administratorPrincipal = mock(OAuthPrincipal.class);
         when(tokenValidator.validate(administratorBearerToken)).thenReturn(administratorPrincipal);
 
-        var roleExtractor = mock(ScopeExtractor.class);
-        when(roleExtractor.extractScopes(administratorPrincipal)).thenReturn(Set.of(Scope.WEBMENTIONS_MANAGE));
+        var scopeExtractor = mock(ScopeExtractor.class);
+        when(scopeExtractor.extractScopes(administratorPrincipal)).thenReturn(Set.of(Scope.WEBMENTIONS_MANAGE));
 
         var webmentionRepository = mock(WebmentionRepository.class);
         var webmention           = mock(Webmention.class);
@@ -37,7 +37,7 @@ class WebmentionPluginTest {
         app = Javalin.create(config -> {
             config.registerPlugin(new OAuthResourceServerPlugin<>(oauth -> {
                 oauth.tokenValidator = tokenValidator;
-                oauth.scopeExtractor = roleExtractor;
+                oauth.scopeExtractor = scopeExtractor;
             }));
 
             config.registerPlugin(new WebmentionPlugin(webmentionConfig -> {
