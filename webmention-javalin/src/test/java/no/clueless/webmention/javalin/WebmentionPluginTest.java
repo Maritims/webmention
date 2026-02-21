@@ -25,17 +25,15 @@ class WebmentionPluginTest {
     void setUp() {
         var tokenValidator         = mock(TokenValidator.class);
         var administratorPrincipal = mock(OAuthPrincipal.class);
+        when(administratorPrincipal.scopes()).thenReturn(Set.of(Scope.WEBMENTIONS_MANAGE));
         when(tokenValidator.validate(administratorBearerToken)).thenReturn(administratorPrincipal);
-
-        var scopeExtractor = mock(ScopeExtractor.class);
-        when(scopeExtractor.extractScopes(administratorPrincipal)).thenReturn(Set.of(Scope.WEBMENTIONS_MANAGE));
 
         var webmentionRepository = mock(WebmentionRepository.class);
         var webmention           = mock(Webmention.class);
         when(webmentionRepository.getById(1)).thenReturn(Optional.of(webmention));
 
         app = Javalin.create(config -> {
-            config.registerPlugin(new OAuthResourceServerPlugin<OAuthPrincipal>(tokenValidator, scopeExtractor));
+            config.registerPlugin(new OAuthResourceServerPlugin(tokenValidator));
             config.registerPlugin(new WebmentionPlugin(mock(WebmentionProcessor.class), webmentionRepository));
         });
     }

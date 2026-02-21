@@ -3,7 +3,6 @@ package no.clueless.oauth;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.Claim;
-import com.auth0.jwt.interfaces.DecodedJWT;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -14,7 +13,7 @@ import java.util.stream.Collectors;
 /**
  * The default implementation of the {@link TokenGenerator} and {@link TokenGenerator} interfaces.
  */
-public class DefaultJwtManager implements TokenGenerator, TokenValidator<DecodedJWT>, ScopeExtractor<DecodedJWT> {
+public class DefaultTokenManager implements TokenGenerator, TokenValidator {
     private final Algorithm algorithm;
     private final String    issuer;
     private final long      accessTokenValiditySeconds;
@@ -27,7 +26,7 @@ public class DefaultJwtManager implements TokenGenerator, TokenValidator<Decoded
      * @param accessTokenValiditySeconds The number of seconds the JWT should be valid for.
      * @throws IllegalArgumentException If the algorithm is null, the issuer is null or blank, or accessTokenValiditySeconds is <= 0.
      */
-    public DefaultJwtManager(Algorithm algorithm, String issuer, long accessTokenValiditySeconds) {
+    public DefaultTokenManager(Algorithm algorithm, String issuer, long accessTokenValiditySeconds) {
         if (algorithm == null) {
             throw new IllegalArgumentException("algorithm cannot be null");
         }
@@ -70,35 +69,29 @@ public class DefaultJwtManager implements TokenGenerator, TokenValidator<Decoded
      * Validates the given token.
      *
      * @param token The token to validate.
-     * @return The decoded JWT.
+     * @return The authenticated principal.
      * @throws IllegalArgumentException If the token is null or blank.
      */
     @Override
-    public DecodedJWT validate(String token) {
+    public OAuthPrincipal validate(String token) {
         if (token == null || token.isBlank()) {
             throw new IllegalArgumentException("token cannot be null or blank");
         }
 
-        return JWT.require(algorithm)
+        var decodedJWT = JWT.require(algorithm)
                 .withIssuer(issuer)
                 .build()
                 .verify(token);
-    }
 
-    @Override
-    public Set<Scope> extractScopes(DecodedJWT decodedJWT) {
-        if (decodedJWT == null) {
-            throw new IllegalArgumentException("decodedJWT cannot be null");
-        }
-
-        return Optional.ofNullable(decodedJWT.getClaim("scope"))
+        var scopes = Optional.ofNullable(decodedJWT.getClaim("scope"))
                 .map(Claim::asString)
-                .filter(scope -> !scope.isBlank())
+                .filter(claim -> !claim.isBlank())
                 .stream()
-                .flatMap(scope -> Arrays.stream(scope.trim().split("\\s+")))
+                .flatMap(scope -> Arrays.stream(scope.trim().split("\\s|,")))
                 .map(Scope::fromLabel)
                 .flatMap(Optional::stream)
-                .collect(Collectors.toUnmodifiableSet());
+                .collect(Collectors.toSet());
 
+        return new OAuthPrincipal(decodedJWT.getSubject(), scopes, "client_credentials");
     }
 }

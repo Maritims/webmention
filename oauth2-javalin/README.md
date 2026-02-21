@@ -24,13 +24,12 @@ clients.
 
 ```java
 import com.auth0.jwt.algorithms.Algorithm;
-import no.clueless.oauth.DefaultJwtManager;
+import no.clueless.oauth.DefaultTokenManager;
 
-var app = Javalin.create(config -> config.registerPlugin(new OAuth2ServerPlugin(oauth -> {
-    oauth.tokenPath   = "/oauth/token";
-    oauth.clientStore = new SomeClientStoreImplementation(); // Replace this with your implementation.
-
-    // Use the default `TokenGenerator` implementation.
-    oauth.tokenGenerator = new DefaultJwtManager(Algorithm.HMAC256("your-secret-key-here"), "your-issuer-url-here", 3600);
-}))).start(8080);
+var app = Javalin.create(config -> {
+    var clientStore = new SomeClientStoreImplementation(); // Replace this with your implementation.
+    var jwtManager  = new DefaultTokenManager(Algorithm.HMAC256("your-secret-key-here"), "your-issuer-url-here", 3600);
+    config.registerPlugin(new OAuthServerPlugin(clientStore, jwtManager));
+    config.registerPlugin(new OAuthResourceServerPlugin<>(jwtManager, jwtManager));
+}).start(8080);
 ```

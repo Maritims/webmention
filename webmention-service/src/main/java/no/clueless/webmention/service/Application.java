@@ -37,12 +37,12 @@ public class Application {
         onWebmentionReceived.subscribe(new WebmentionReceivedSubscriber<>((WebmentionRepository) webmentionRepository, webmentionNotifier));
         webmentionProcessor.start();
 
-        var defaultJwtManager = new DefaultJwtManager(Algorithm.HMAC256(options.oauthJwtSecret()), options.oauthIssuer(), options.oauthAccessTokenValiditySeconds());
+        var defaultJwtManager = new DefaultTokenManager(Algorithm.HMAC256(options.oauthJwtSecret()), options.oauthIssuer(), options.oauthAccessTokenValiditySeconds());
 
         var javalin = Javalin.create(config -> {
             config.jsonMapper(new JavalinJackson(new ObjectMapper().registerModule(new JavaTimeModule()).configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false), true));
             config.registerPlugin(new OAuthServerPlugin("/oauth/token", options.oauthAccessTokenValiditySeconds(), clientStore, defaultJwtManager));
-            config.registerPlugin(new OAuthResourceServerPlugin<>(defaultJwtManager, defaultJwtManager));
+            config.registerPlugin(new OAuthResourceServerPlugin(defaultJwtManager));
             if (options.isOauthManagementApiEnabled()) {
                 config.registerPlugin(new OAuthManagementPlugin(clientStore, true));
             }

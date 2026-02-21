@@ -159,4 +159,29 @@ public class SqliteClientStore implements ClientStore {
             throw new RuntimeException("Failed to connect to database", e);
         }
     }
+
+    @Override
+    public Set<OAuthClient> getClients(int page, int size, String orderByColumn, boolean ascending) {
+        String direction = ascending ? "ASC" : "DESC";
+        String query     = "SELECT * FROM clients ORDER BY " + orderByColumn + " " + direction + " LIMIT ? OFFSET ?";
+
+        try (var connection = DriverManager.getConnection(connectionString)) {
+            var statement = connection.prepareStatement(query);
+            statement.setInt(1, size);
+            statement.setInt(2, page * size);
+            var resultSet = statement.executeQuery();
+
+            Set<OAuthClient> clients = new java.util.HashSet<>();
+            while (resultSet.next()) {
+                var clientId     = resultSet.getString("clientId");
+                var clientSecret = resultSet.getString("clientSecret");
+                var scopes       = Arrays.stream(resultSet.getString("scopes").split(",")).collect(Collectors.toSet());
+                var isEnabled    = resultSet.getBoolean("isEnabled");
+                clients.add(new OAuthClient(clientId, clientSecret, scopes, isEnabled));
+            }
+            return clients;
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to connect to database", e);
+        }
+    }
 }
