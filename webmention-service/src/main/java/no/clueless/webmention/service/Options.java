@@ -33,6 +33,22 @@ public record Options(
         boolean testMode,
         Set<String> testPages
 ) {
+    /**
+     * Constructor.
+     *
+     * @param httpServerPort                  the port to run the webmention service on. Must be between 1024 and 65535.
+     * @param databaseConnectionString        the JDBC connection string to the database. Must not be null or blank.
+     * @param webmentionEndpoint              the endpoint to send webmentions to. Must not be null or blank.
+     * @param supportedDomains                the domains to accept webmentions on behalf of. Must not be null or empty.
+     * @param connectTimeout                  the connect timeout for connections to webmention senders when verifying webmentions. Must be greater than 0.
+     * @param oauthIssuer                     the OAuth 2.0 access token issuer. Must not be null or blank.
+     * @param oauthJwtSecret                  the OAuth 2.0 access token signing secret. Must not be null or blank.
+     * @param oauthAccessTokenValiditySeconds the OAuth 2.0 access token validity in seconds. Must be greater than 0.
+     * @param isOauthManagementApiEnabled     whether to enable the OAuth 2.0 management API.
+     * @param testMode                        whether to run in test mode.
+     * @param testPages                       the test pages to use.
+     * @throws IllegalArgumentException if any of the parameters are invalid.
+     */
     public Options {
         if (httpServerPort < 1024 || httpServerPort > 65535) {
             throw new IllegalArgumentException("httpServerPort must be between 1024 and 65535");

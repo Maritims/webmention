@@ -4,6 +4,11 @@ import java.util.Set;
 
 /**
  * Represents an OAuth client.
+ *
+ * @param clientId           the client id
+ * @param hashedClientSecret the hashed client secret
+ * @param scopes             the client scopes
+ * @param isEnabled          whether the client is enabled
  */
 public record OAuthClient(String clientId, String hashedClientSecret, Set<String> scopes, boolean isEnabled) {
     /**

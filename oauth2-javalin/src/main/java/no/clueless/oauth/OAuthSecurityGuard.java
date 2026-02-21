@@ -4,11 +4,27 @@ import io.javalin.config.JavalinConfig;
 import io.javalin.config.Key;
 import io.javalin.config.NoValueForKeyException;
 
+/**
+ * Helper class for OAuth security guard.
+ */
 public class OAuthSecurityGuard {
+    /**
+     * A Javalin config key indicating whether the OAuth security guard is active.
+     */
     public static final Key<Boolean> GUARD_ACTIVE = new Key<>("oauth-guard-active");
 
+    private OAuthSecurityGuard() {
+    }
+
+    /**
+     * Checks if the OAuth security guard is active.
+     *
+     * @param config The Javalin config.
+     * @throws IllegalArgumentException if config is null.
+     * @throws RuntimeException         if the OAuth security guard is not active.
+     */
     public static void requireActiveGuard(JavalinConfig config) {
-        if(config == null) {
+        if (config == null) {
             throw new IllegalArgumentException("config cannot be null");
         }
         try {

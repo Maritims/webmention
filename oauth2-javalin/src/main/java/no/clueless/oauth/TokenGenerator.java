@@ -2,6 +2,9 @@ package no.clueless.oauth;
 
 import java.util.Set;
 
+/**
+ * Generates JSON Web Tokens for OAuth clients.
+ */
 @FunctionalInterface
 public interface TokenGenerator {
     /**

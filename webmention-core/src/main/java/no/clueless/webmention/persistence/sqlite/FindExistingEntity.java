@@ -2,6 +2,12 @@ package no.clueless.webmention.persistence.sqlite;
 
 import no.clueless.webmention.persistence.Entity;
 
+/**
+ * Finds an existing entity based on something from the given entity.
+ *
+ * @param <TEntity> the type of entity to find
+ * @param <TId>     the type of the entity's id
+ */
 @FunctionalInterface
 public interface FindExistingEntity<TEntity extends Entity<TId>, TId> {
     /**

@@ -16,21 +16,20 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.nio.file.Path;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
 
+/**
+ * A command line interface for webmention.
+ */
 public class WebmentionCli {
     private static final Logger                    log = LoggerFactory.getLogger(WebmentionCli.class);
     private final        WebmentionDirectoryWalker webmentionDirectoryWalker;
     private final        WebmentionSender          webmentionSender;
 
-    public WebmentionCli(WebmentionDirectoryWalker webmentionDirectoryWalker, WebmentionSender webmentionSender) {
-        this.webmentionDirectoryWalker = Objects.requireNonNull(webmentionDirectoryWalker, "webmentionDirectoryWalker cannot be null");
-        this.webmentionSender          = Objects.requireNonNull(webmentionSender, "webmentionSender cannot be null");
-    }
-
+    /**
+     * Default constructor.
+     */
     public WebmentionCli() {
         this.webmentionDirectoryWalker = new WebmentionDirectoryWalker(new WebmentionHtmlSourceScanner(), Set.of("htm", "html"));
         var httpClient = new SecureHttpClient(HttpClient.newBuilder().build(), 1024 * 1024 * 1024);
@@ -46,14 +45,14 @@ public class WebmentionCli {
 
     public void sendWebmention(WebmentionEvent webmentionEvent, boolean dryRun) {
         try {
-            if(dryRun) {
+            if (dryRun) {
                 log.info("[Dry Run] Webmention would have been sent: {} -> {}", webmentionEvent.sourceUrl(), webmentionEvent.targetUrl());
             } else {
                 webmentionSender.send(webmentionEvent.sourceUrl(), webmentionEvent.targetUrl());
                 log.info("Webmention was sent: {} -> {}", webmentionEvent.sourceUrl(), webmentionEvent.targetUrl());
             }
         } catch (WebmentionEndpointNotFoundException | UnexpectedContentTypeException e) {
-            log.warn("Webmention was not sent: {} -> {}: {}",  webmentionEvent.sourceUrl(), webmentionEvent.targetUrl(), e.getMessage());
+            log.warn("Webmention was not sent: {} -> {}: {}", webmentionEvent.sourceUrl(), webmentionEvent.targetUrl(), e.getMessage());
         } catch (WebmentionException e) {
             log.warn("Webmention was not sent: {} -> {}", webmentionEvent.sourceUrl(), webmentionEvent.targetUrl(), e);
         }

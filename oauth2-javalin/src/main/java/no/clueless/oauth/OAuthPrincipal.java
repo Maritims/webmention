@@ -3,7 +3,22 @@ package no.clueless.oauth;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Represents an authenticated OAuth client.
+ *
+ * @param clientId  the client id
+ * @param scopes    the scopes granted to the client
+ * @param grantType the grant type used to authenticate the client
+ */
 public record OAuthPrincipal(String clientId, Set<Scope> scopes, String grantType) {
+    /**
+     * Constructor.
+     *
+     * @param clientId  the client id
+     * @param scopes    the scopes granted to the client
+     * @param grantType the grant type used to authenticate the client
+     * @throws IllegalArgumentException if clientId or grantType is null or blank.
+     */
     public OAuthPrincipal {
         if (clientId == null || clientId.isBlank()) {
             throw new IllegalArgumentException("clientId cannot be null or blank");

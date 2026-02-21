@@ -10,10 +10,19 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * A secure HTTP client.
+ */
 public class SecureHttpClient {
     private final HttpClient httpClient;
     private final long       maxContentLengthInBytes;
 
+    /**
+     * Constructor.
+     *
+     * @param httpClient              the underlying HTTP client.
+     * @param maxContentLengthInBytes the maximum content length in bytes of a response.
+     */
     public SecureHttpClient(HttpClient httpClient, long maxContentLengthInBytes) {
         if (maxContentLengthInBytes < 1) {
             throw new IllegalArgumentException("maxContentLengthInBytes must be greater than zero");
@@ -22,6 +31,14 @@ public class SecureHttpClient {
         this.maxContentLengthInBytes = maxContentLengthInBytes;
     }
 
+    /**
+     * Sends the given HTTP request.
+     *
+     * @param httpRequest the request to send
+     * @return the response
+     * @throws IOException          if an I/O error occurs
+     * @throws InterruptedException if the thread is interrupted
+     */
     public HttpResponse<String> send(HttpRequest httpRequest) throws IOException, InterruptedException {
         Objects.requireNonNull(httpRequest);
 
@@ -39,6 +56,12 @@ public class SecureHttpClient {
         });
     }
 
+    /**
+     * Determines whether the given URI is restricted.
+     *
+     * @param uri the URI to check
+     * @return true if the URI is restricted, false otherwise
+     */
     private static boolean isRestricted(URI uri) {
         if (uri.getHost() == null || uri.getHost().isBlank()) {
             return false;
@@ -54,6 +77,13 @@ public class SecureHttpClient {
         return address.isLoopbackAddress() || address.isSiteLocalAddress() || address.isLinkLocalAddress();
     }
 
+    /**
+     * Creates a new secure HTTP client.
+     *
+     * @param connectTimeout  the connect timeout
+     * @param blockRestricted whether to block restricted URIs
+     * @return the client
+     */
     public static SecureHttpClient newClient(Duration connectTimeout, boolean blockRestricted) {
         var httpClient = HttpClient.newBuilder()
                 .connectTimeout(connectTimeout)

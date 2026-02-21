@@ -2,6 +2,12 @@ package no.clueless.webmention.persistence.sqlite;
 
 import no.clueless.webmention.persistence.Entity;
 
+/**
+ * Creates a new entity based on an existing entity.
+ *
+ * @param <TEntity> The type of entity to create.
+ * @param <TId>     The type of the entity's id.
+ */
 @FunctionalInterface
 public interface CreateNewEntity<TEntity extends Entity<TId>, TId> {
     /**

@@ -12,11 +12,21 @@ import java.net.http.HttpResponse;
 import java.util.Objects;
 import java.util.Set;
 
+/**
+ * A default implementation of {@link WebmentionTargetVerifier}.
+ */
 public class DefaultWebmentionTargetVerifier implements WebmentionTargetVerifier {
     private final Set<String>                  supportedDomains;
     private final SecureHttpClient             httpClient;
     private final WebmentionEndpointDiscoverer discoverer;
 
+    /**
+     * Constructor.
+     *
+     * @param supportedDomains the set of supported domains which this verifier will accept webmentions for.
+     * @param httpClient       the HTTP client to use for fetching webmention endpoints.
+     * @param discoverer       the webmention endpoint discoverer to use for discovering webmention endpoints.
+     */
     public DefaultWebmentionTargetVerifier(Set<String> supportedDomains, SecureHttpClient httpClient, WebmentionEndpointDiscoverer discoverer) {
         this.supportedDomains = Objects.requireNonNull(supportedDomains, "supportedDomains cannot be null");
         if (supportedDomains.isEmpty()) {
@@ -26,6 +36,13 @@ public class DefaultWebmentionTargetVerifier implements WebmentionTargetVerifier
         this.discoverer = Objects.requireNonNull(discoverer, "discoverer cannot be null");
     }
 
+    /**
+     * Fetches the given URI and returns the response.
+     *
+     * @param uri the URI to fetch
+     * @return the response
+     * @throws WebmentionException if the fetch failed
+     */
     private HttpResponse<String> fetch(URI uri) throws WebmentionException {
         var httpRequest = WebmentionHttpRequestBuilder.newBuilder()
                 .uri(uri)
@@ -46,6 +63,13 @@ public class DefaultWebmentionTargetVerifier implements WebmentionTargetVerifier
         return httpResponse;
     }
 
+    /**
+     * Verifies that the given URI is a valid webmention target.
+     *
+     * @param targetUri the URI to verify
+     * @return true if the URI is a valid webmention target, false otherwise
+     * @throws WebmentionException if the verification failed
+     */
     @Override
     public boolean verify(URI targetUri) throws WebmentionException {
         if (!supportedDomains.contains(targetUri.getHost())) {

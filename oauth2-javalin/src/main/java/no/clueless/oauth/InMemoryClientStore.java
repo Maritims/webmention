@@ -12,6 +12,12 @@ import java.util.stream.Collectors;
 public class InMemoryClientStore implements ClientStore {
     private final Map<String, OAuthClient> clients = new ConcurrentHashMap<>();
 
+    /**
+     * Default constructor.
+     */
+    public InMemoryClientStore() {
+    }
+
     @Override
     public OAuthClient getClient(String clientId) {
         if (clientId == null || clientId.isBlank()) {

@@ -111,12 +111,7 @@ public class OAuthServerPlugin extends Plugin<Void> {
             }
 
             var token = tokenGenerator.generate(client, finalScopes);
-            ctx.json(Map.of(
-                    "access_token", token,
-                    "token_type", "Bearer",
-                    "expires_in", accessTokenValiditySeconds,
-                    "scope", finalScopes.stream().map(Scope::getLabel).collect(Collectors.joining(" "))
-            ));
+            ctx.json(new TokenResponse(token, "Bearer", accessTokenValiditySeconds, finalScopes.stream().map(Scope::getLabel).collect(Collectors.joining(""))));
         }));
     }
 }

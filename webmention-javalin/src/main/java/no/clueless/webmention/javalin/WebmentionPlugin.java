@@ -48,7 +48,7 @@ public class WebmentionPlugin extends Plugin<Void> {
         if (webmentionRepository == null) {
             throw new IllegalArgumentException("webmentionRepository cannot be null");
         }
-        this.endpoint             = endpoint == null || endpoint.isBlank() ? "/webmentions" : endpoint;
+        this.endpoint             = endpoint == null || endpoint.isBlank() ? "/webmention" : endpoint;
         this.webmentionProcessor  = webmentionProcessor;
         this.webmentionRepository = webmentionRepository;
         this.testMode             = testMode;

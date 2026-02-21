@@ -8,12 +8,23 @@ import java.util.List;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Flow;
 
+/**
+ * A body subscriber that limits the number of bytes received.
+ *
+ * @param <T> the type of the body
+ */
 public class LimitedBodySubscriber<T> implements HttpResponse.BodySubscriber<T> {
     private final HttpResponse.BodySubscriber<T> downstream;
     private final long                           maxBytes;
     private       long                           bytesReceived = 0;
     private       Flow.Subscription              subscription;
 
+    /**
+     * Constructor.
+     *
+     * @param downstream the downstream subscriber
+     * @param maxBytes   the maximum number of bytes to receive
+     */
     public LimitedBodySubscriber(HttpResponse.BodySubscriber<T> downstream, long maxBytes) {
         this.downstream = downstream;
         this.maxBytes   = maxBytes;
@@ -32,7 +43,7 @@ public class LimitedBodySubscriber<T> implements HttpResponse.BodySubscriber<T> 
 
     @Override
     public void onNext(List<ByteBuffer> items) {
-        for(var item : items) {
+        for (var item : items) {
             bytesReceived += item.remaining();
         }
 

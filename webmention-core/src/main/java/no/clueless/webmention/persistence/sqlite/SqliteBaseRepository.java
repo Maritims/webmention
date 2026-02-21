@@ -10,11 +10,23 @@ import java.util.Optional;
 import static no.clueless.webmention.persistence.sqlite.SqliteDatabasePathVerifier.extractAbsoluteDatabasePath;
 import static no.clueless.webmention.persistence.sqlite.SqliteDatabasePathVerifier.verifyDatabasePath;
 
+/**
+ * A base repository for using a Sqlite database.
+ *
+ * @param <TEntity>
+ */
 abstract public class SqliteBaseRepository<TEntity extends Entity<Integer>> implements Repository<TEntity, Integer> {
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(SqliteBaseRepository.class);
     protected final      String connectionString;
     private final        String createTableQuery;
 
+    /**
+     * Constructor.
+     *
+     * @param connectionString the JDBC connection string, e.g. "jdbc:sqlite:path/to/database.db"
+     * @param createTableQuery the SQL query to create the table if it does not exist
+     * @throws IllegalArgumentException if connectionString or createTableQuery is null or empty
+     */
     protected SqliteBaseRepository(String connectionString, String createTableQuery) {
         if (connectionString == null || connectionString.isBlank()) {
             throw new IllegalArgumentException("connectionString cannot be null or empty");
@@ -27,6 +39,11 @@ abstract public class SqliteBaseRepository<TEntity extends Entity<Integer>> impl
         this.createTableQuery = createTableQuery;
     }
 
+    /**
+     * Initializes the database by creating the table if it does not exist.
+     *
+     * @return this repository
+     */
     public final SqliteBaseRepository<TEntity> initialize() {
         if (!verifyDatabasePath(extractAbsoluteDatabasePath(connectionString))) {
             throw new RuntimeException("Database path did not pass verification. The connection string must be of the form jdbc:sqlite:path/to/database.db, but was " + connectionString);
@@ -42,19 +59,57 @@ abstract public class SqliteBaseRepository<TEntity extends Entity<Integer>> impl
         return this;
     }
 
+    /**
+     * Maps a ResultSet to an entity.
+     *
+     * @param resultSet the ResultSet to map from
+     * @return the mapped entity
+     * @throws SQLException if mapping fails
+     */
     protected abstract TEntity mapFromResultSet(ResultSet resultSet) throws SQLException;
 
+    /**
+     * Prepares a statement for counting entities.
+     *
+     * @param connection the connection
+     * @return the prepared statement
+     * @throws SQLException if preparing fails
+     */
     protected abstract PreparedStatement prepareCountStatement(Connection connection) throws SQLException;
 
+    /**
+     * Prepares a statement for finding an entity by id.
+     *
+     * @param connection the connection
+     * @param id         the id
+     * @return the prepared statement
+     * @throws SQLException if preparing fails
+     */
     protected abstract PreparedStatement prepareFindByIdStatement(Connection connection, Integer id) throws SQLException;
 
+    /**
+     * Prepares a statement for creating an entity.
+     *
+     * @param connection the connection
+     * @param entity     the entity to create
+     * @return the prepared statement
+     * @throws SQLException if preparing fails
+     */
     protected abstract PreparedStatement prepareCreateStatement(Connection connection, TEntity entity) throws SQLException;
 
+    /**
+     * Prepares a statement for updating an entity.
+     *
+     * @param connection the connection
+     * @param entity     the entity to update
+     * @return the prepared statement
+     * @throws SQLException if preparing fails
+     */
     protected abstract PreparedStatement prepareUpdateStatement(Connection connection, TEntity entity) throws SQLException;
 
     @Override
     public Integer count() {
-        try(var connection = DriverManager.getConnection(connectionString)) {
+        try (var connection = DriverManager.getConnection(connectionString)) {
             var statement = prepareCountStatement(connection);
             var resultSet = statement.executeQuery();
             resultSet.next();

@@ -24,7 +24,7 @@ public class DefaultTokenManager implements TokenGenerator, TokenValidator {
      * @param algorithm                  The algorithm to use for signing the JWT.
      * @param issuer                     The issuer to use for the JWT.
      * @param accessTokenValiditySeconds The number of seconds the JWT should be valid for.
-     * @throws IllegalArgumentException If the algorithm is null, the issuer is null or blank, or accessTokenValiditySeconds is <= 0.
+     * @throws IllegalArgumentException If the algorithm is null, the issuer is null or blank, or accessTokenValiditySeconds is less than or equal to 0.
      */
     public DefaultTokenManager(Algorithm algorithm, String issuer, long accessTokenValiditySeconds) {
         if (algorithm == null) {

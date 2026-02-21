@@ -8,6 +8,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 
+/**
+ * A Javalin plugin acting as an OAuth 2.0 Resource Server.
+ */
 public class OAuthResourceServerPlugin extends Plugin<Void> {
     private final TokenValidator tokenValidator;
     private final String         principalKey;
@@ -27,6 +30,11 @@ public class OAuthResourceServerPlugin extends Plugin<Void> {
         this.principalKey   = principalKey == null || principalKey.isBlank() ? "auth_principal" : principalKey;
     }
 
+    /**
+     * Constructor with default values.
+     *
+     * @param tokenValidator the token validator
+     */
     public OAuthResourceServerPlugin(TokenValidator tokenValidator) {
         this(tokenValidator, "auth_principal");
     }
