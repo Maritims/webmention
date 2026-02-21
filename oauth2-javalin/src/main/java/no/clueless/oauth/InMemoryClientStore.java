@@ -21,6 +21,21 @@ public class InMemoryClientStore implements ClientStore {
     }
 
     @Override
+    public void disableClient(String clientId) {
+        clients.computeIfPresent(clientId, (k, client) -> new OAuthClient(client.clientId(), client.hashedClientSecret(), client.scopes(), false));
+    }
+
+    @Override
+    public void enableClient(String clientId) {
+        clients.computeIfPresent(clientId, (k, client) -> new OAuthClient(client.clientId(), client.hashedClientSecret(), client.scopes(), true));
+    }
+
+    @Override
+    public void deleteClient(String clientId) {
+        clients.remove(clientId);
+    }
+
+    @Override
     public void registerClient(String clientId, String clientSecret, Set<Scope> scopes) {
         if (clientId == null || clientId.isBlank()) {
             throw new IllegalArgumentException("clientId cannot be null or blank");

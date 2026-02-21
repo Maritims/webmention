@@ -13,6 +13,8 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import static io.javalin.apibuilder.ApiBuilder.*;
+
 /**
  * A Javalin plugin acting as an OAuth 2.0 Authorization Server.
  */
@@ -77,55 +79,106 @@ public class OAuthServerPlugin extends Plugin<OAuthServerPlugin.Config> {
             }
         }
 
-        config.router.mount(router -> router.post(pluginConfig.tokenPath, ctx -> {
-            var grantType = ctx.formParam("grant_type");
-            if (!"client_credentials".equals(grantType)) {
-                throw new BadRequestResponse("unsupported_grant_type");
-            }
-
-            var clientId     = ctx.formParam("client_id");
-            var clientSecret = ctx.formParam("client_secret");
-
-            var authorizationHeader = ctx.header("Authorization");
-            if (authorizationHeader != null && authorizationHeader.startsWith("Basic ")) {
-                var base64EncodedToken = authorizationHeader.substring(6);
-                var decodedToken       = new String(java.util.Base64.getDecoder().decode(base64EncodedToken));
-                var parts              = decodedToken.split(":", 2);
-                clientId     = parts[0];
-                clientSecret = parts[1];
-            }
-
-            if (!pluginConfig.clientStore.authenticate(clientId, clientSecret)) {
-                throw new UnauthorizedResponse("invalid_client");
-            }
-
-            var client = Optional.ofNullable(pluginConfig.clientStore.getClient(clientId))
-                    .filter(OAuthClient::isEnabled)
-                    .orElseThrow(() -> new BadRequestResponse("invalid_client"));
-
-            Set<Scope> finalScopes;
-            var        scopeParameter = ctx.formParam("scope");
-            if (scopeParameter == null || scopeParameter.isBlank()) {
-                finalScopes = client.scopes() == null ? Collections.emptySet() : client.scopes().stream().map(Scope::fromLabel).flatMap(Optional::stream).collect(Collectors.toSet());
-            } else {
-                var requestedLabels = Arrays.stream(scopeParameter.split("\\s+")).collect(Collectors.toSet());
-                finalScopes = requestedLabels.stream()
-                        .map(Scope::fromLabel)
-                        .flatMap(Optional::stream)
-                        .collect(Collectors.toSet());
-
-                if (finalScopes.size() != requestedLabels.size() || !client.scopes().containsAll(requestedLabels)) {
-                    throw new BadRequestResponse("invalid_scope");
+        config.router.mount(router -> {
+        }).apiBuilder(() -> {
+            post(pluginConfig.tokenPath, ctx -> {
+                var grantType = ctx.formParam("grant_type");
+                if (!"client_credentials".equals(grantType)) {
+                    throw new BadRequestResponse("unsupported_grant_type");
                 }
-            }
 
-            var token = pluginConfig.tokenGenerator.generate(client, finalScopes);
-            ctx.json(Map.of(
-                    "access_token", token,
-                    "token_type", "Bearer",
-                    "expires_in", 3600,
-                    "scope", finalScopes.stream().map(Scope::getLabel).collect(Collectors.joining(" "))
-            ));
-        }));
+                var clientId     = ctx.formParam("client_id");
+                var clientSecret = ctx.formParam("client_secret");
+
+                var authorizationHeader = ctx.header("Authorization");
+                if (authorizationHeader != null && authorizationHeader.startsWith("Basic ")) {
+                    var base64EncodedToken = authorizationHeader.substring(6);
+                    var decodedToken       = new String(java.util.Base64.getDecoder().decode(base64EncodedToken));
+                    var parts              = decodedToken.split(":", 2);
+                    clientId     = parts[0];
+                    clientSecret = parts[1];
+                }
+
+                if (!pluginConfig.clientStore.authenticate(clientId, clientSecret)) {
+                    throw new UnauthorizedResponse("invalid_client");
+                }
+
+                var client = Optional.ofNullable(pluginConfig.clientStore.getClient(clientId))
+                        .filter(OAuthClient::isEnabled)
+                        .orElseThrow(() -> new BadRequestResponse("invalid_client"));
+
+                Set<Scope> finalScopes;
+                var        scopeParameter = ctx.formParam("scope");
+                if (scopeParameter == null || scopeParameter.isBlank()) {
+                    finalScopes = client.scopes() == null ? Collections.emptySet() : client.scopes().stream().map(Scope::fromLabel).flatMap(Optional::stream).collect(Collectors.toSet());
+                } else {
+                    var requestedLabels = Arrays.stream(scopeParameter.split("\\s+")).collect(Collectors.toSet());
+                    finalScopes = requestedLabels.stream()
+                            .map(Scope::fromLabel)
+                            .flatMap(Optional::stream)
+                            .collect(Collectors.toSet());
+
+                    if (finalScopes.size() != requestedLabels.size() || !client.scopes().containsAll(requestedLabels)) {
+                        throw new BadRequestResponse("invalid_scope");
+                    }
+                }
+
+                var token = pluginConfig.tokenGenerator.generate(client, finalScopes);
+                ctx.json(Map.of(
+                        "access_token", token,
+                        "token_type", "Bearer",
+                        "expires_in", 3600,
+                        "scope", finalScopes.stream().map(Scope::getLabel).collect(Collectors.joining(" "))
+                ));
+            });
+
+            path("clients", () -> {
+                post("", ctx -> {
+                    var clientId     = ctx.formParam("clientId");
+                    var clientSecret = ctx.formParam("clientSecret");
+                    var scopes       = ctx.formParam("scopes");
+
+                    if (clientId == null || clientId.isBlank()) {
+                        throw new BadRequestResponse("Missing clientId");
+                    }
+                    if (clientSecret == null || clientSecret.isBlank()) {
+                        throw new BadRequestResponse("Missing clientSecret");
+                    }
+                    if (scopes == null || scopes.isBlank()) {
+                        throw new BadRequestResponse("Missing scopes");
+                    }
+
+                    pluginConfig.clientStore.registerClient(clientId, clientSecret, Scope.fromLabels(scopes));
+                    ctx.status(201);
+                }, Scope.CLIENTS_MANAGE);
+
+                patch("disable/{clientId}", ctx -> {
+                    var clientId = ctx.pathParam("clientId");
+                    if (clientId.isBlank()) {
+                        throw new BadRequestResponse("clientId cannot be null or blank");
+                    }
+                    pluginConfig.clientStore.disableClient(clientId);
+                    ctx.status(204);
+                }, Scope.CLIENTS_MANAGE);
+
+                patch("enable/{clientId}", ctx -> {
+                    var clientId = ctx.pathParam("clientId");
+                    if (clientId.isBlank()) {
+                        throw new BadRequestResponse("clientId cannot be null or blank");
+                    }
+                    pluginConfig.clientStore.enableClient(clientId);
+                    ctx.status(204);
+                }, Scope.CLIENTS_MANAGE);
+
+                delete("{clientId}", ctx -> {
+                    var clientId = ctx.pathParam("clientId");
+                    if (clientId.isBlank()) {
+                        throw new BadRequestResponse("clientId cannot be null or blank");
+                    }
+                    pluginConfig.clientStore.deleteClient(clientId);
+                    ctx.status(204);
+                }, Scope.CLIENTS_MANAGE);
+            });
+        });
     }
 }

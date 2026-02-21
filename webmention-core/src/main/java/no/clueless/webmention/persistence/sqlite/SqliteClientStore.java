@@ -75,6 +75,57 @@ public class SqliteClientStore implements ClientStore {
     }
 
     @Override
+    public void disableClient(String clientId) {
+        if (clientId == null || clientId.isBlank()) {
+            throw new IllegalArgumentException("clientId cannot be null or blank");
+        }
+        try(var connection = DriverManager.getConnection(connectionString)) {
+            var statement = connection.prepareStatement("UPDATE clients SET isEnabled = false WHERE clientId = ?");
+            statement.setString(1, clientId);
+            var result = statement.executeUpdate();
+            if(result == 0) {
+                throw new RuntimeException("Failed to update client");
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to connect to database", e);
+        }
+    }
+
+    @Override
+    public void enableClient(String clientId) {
+        if (clientId == null || clientId.isBlank()) {
+            throw new IllegalArgumentException("clientId cannot be null or blank");
+        }
+        try(var connection = DriverManager.getConnection(connectionString)) {
+            var statement = connection.prepareStatement("UPDATE clients SET isEnabled = true WHERE clientId = ?");
+            statement.setString(1, clientId);
+            var result = statement.executeUpdate();
+            if(result == 0) {
+                throw new RuntimeException("Failed to update client");
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to connect to database", e);
+        }
+    }
+
+    @Override
+    public void deleteClient(String clientId) {
+        if (clientId == null || clientId.isBlank()) {
+            throw new IllegalArgumentException("clientId cannot be null or blank");
+        }
+        try(var connection = DriverManager.getConnection(connectionString)) {
+            var statement = connection.prepareStatement("DELETE FROM clients WHERE clientId = ?");
+            statement.setString(1, clientId);
+            var result = statement.executeUpdate();
+            if(result == 0) {
+                throw new RuntimeException("Failed to delete client");
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to connect to database", e);
+        }
+    }
+
+    @Override
     public void registerClient(String clientId, String clientSecret, Set<Scope> scopes) {
         if (clientId == null || clientId.isBlank()) {
             throw new IllegalArgumentException("clientId cannot be null or blank");

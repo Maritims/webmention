@@ -14,6 +14,24 @@ public interface ClientStore {
     OAuthClient getClient(String clientId);
 
     /**
+     * Disables the OAuthClient with the given clientId.
+     * @param clientId the client id to disable
+     */
+    void disableClient(String clientId);
+
+    /**
+     * Enables the OAuthClient with the given clientId.
+     * @param clientId the client id to enable
+     */
+    void enableClient(String clientId);
+
+    /**
+     * Deletes the OAuthClient with the given clientId.
+     * @param clientId the client id to delete
+     */
+    void deleteClient(String clientId);
+
+    /**
      * Registers a new OAuthClient with the given clientId and clientSecret.
      *
      * @param clientId     the client id

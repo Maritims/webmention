@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public enum Scope implements RouteRole {
+    CLIENTS_MANAGE("clients:manage"),
     WEBMENTIONS_MANAGE("webmentions:manage");
 
     private final String label;
