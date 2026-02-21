@@ -61,9 +61,10 @@ public class Application {
             ));
 
             config.registerPlugin(new OAuthServerPlugin(oauth -> {
-                oauth.tokenPath      = "/oauth/token";
-                oauth.tokenGenerator = defaultJwtManager;
-                oauth.clientStore    = new SqliteClientStore(connectionString).initialize();
+                oauth.tokenPath                  = "/oauth/token";
+                oauth.tokenGenerator             = defaultJwtManager;
+                oauth.clientStore                = new SqliteClientStore(connectionString).initialize();
+                oauth.accessTokenValiditySeconds = accessTokenValiditySeconds;
             }));
 
             config.registerPlugin(new OAuthResourceServerPlugin<DecodedJWT>(oauth -> {

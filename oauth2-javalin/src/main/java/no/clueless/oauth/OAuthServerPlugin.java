@@ -28,7 +28,7 @@ public class OAuthServerPlugin extends Plugin<OAuthServerPlugin.Config> {
         /**
          * The path to the token endpoint. Defaults to "/oauth/token".
          */
-        public String         tokenPath           = "/oauth/token";
+        public String         tokenPath                  = "/oauth/token";
         /**
          * The client store.
          */
@@ -37,9 +37,10 @@ public class OAuthServerPlugin extends Plugin<OAuthServerPlugin.Config> {
          * The token generator.
          */
         public TokenGenerator tokenGenerator;
-        public String         initialClientId     = System.getenv("WEBMENTION_INITIAL_CLIENT_ID");
-        public String         initialClientSecret = System.getenv("WEBMENTION_INITIAL_CLIENT_SECRET");
-        public String         initialClientScopes = System.getenv("WEBMENTION_INITIAL_CLIENT_SCOPES");
+        public int            accessTokenValiditySeconds = 3600;
+        public String         initialClientId            = System.getenv("WEBMENTION_INITIAL_CLIENT_ID");
+        public String         initialClientSecret        = System.getenv("WEBMENTION_INITIAL_CLIENT_SECRET");
+        public String         initialClientScopes        = System.getenv("WEBMENTION_INITIAL_CLIENT_SCOPES");
 
     }
 
@@ -127,7 +128,7 @@ public class OAuthServerPlugin extends Plugin<OAuthServerPlugin.Config> {
                 ctx.json(Map.of(
                         "access_token", token,
                         "token_type", "Bearer",
-                        "expires_in", 3600,
+                        "expires_in", pluginConfig.accessTokenValiditySeconds,
                         "scope", finalScopes.stream().map(Scope::getLabel).collect(Collectors.joining(" "))
                 ));
             });
