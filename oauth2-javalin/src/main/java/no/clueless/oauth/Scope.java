@@ -39,7 +39,7 @@ public enum Scope implements RouteRole {
         if (label == null || label.isBlank()) {
             throw new IllegalArgumentException("label cannot be null or blank");
         }
-        return Arrays.stream(label.split("\\s+"))
+        return Arrays.stream(label.split("\\s+|,"))
                 .filter(scope -> !scope.isBlank())
                 .map(Scope::fromLabel)
                 .flatMap(Optional::stream)

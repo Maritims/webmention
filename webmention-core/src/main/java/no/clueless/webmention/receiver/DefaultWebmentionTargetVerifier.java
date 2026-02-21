@@ -61,36 +61,4 @@ public class DefaultWebmentionTargetVerifier implements WebmentionTargetVerifier
 
         return true;
     }
-
-    public static class Builder {
-        private Set<String>                  supportedDomains;
-        private SecureHttpClient             httpClient;
-        private WebmentionEndpointDiscoverer webmentionEndpointDiscoverer;
-
-        private Builder() {
-        }
-
-        public Builder supportedDomains(Set<String> supportedDomains) {
-            this.supportedDomains = supportedDomains;
-            return this;
-        }
-
-        public Builder httpClient(SecureHttpClient httpClient) {
-            this.httpClient = httpClient;
-            return this;
-        }
-
-        public Builder endpointDiscoverer(WebmentionEndpointDiscoverer webmentionEndpointDiscoverer) {
-            this.webmentionEndpointDiscoverer = webmentionEndpointDiscoverer;
-            return this;
-        }
-
-        public WebmentionTargetVerifier build() {
-            return new DefaultWebmentionTargetVerifier(supportedDomains, httpClient, webmentionEndpointDiscoverer);
-        }
-    }
-
-    public static Builder newBuilder() {
-        return new Builder();
-    }
 }

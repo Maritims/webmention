@@ -35,30 +35,4 @@ public class WebmentionRateLimiter {
         lruCache.put(source, now);
         return true;
     }
-
-    public static class Builder {
-        private int  maxEntries;
-        private long cooldownMillis;
-
-        private Builder() {
-        }
-
-        public Builder maxEntries(int maxEntries) {
-            this.maxEntries = maxEntries;
-            return this;
-        }
-
-        public Builder cooldownMillis(long cooldownMillis) {
-            this.cooldownMillis = cooldownMillis;
-            return this;
-        }
-
-        public WebmentionRateLimiter build() {
-            return new WebmentionRateLimiter(maxEntries, cooldownMillis);
-        }
-    }
-
-    public static Builder newBuilder() {
-        return new Builder();
-    }
 }

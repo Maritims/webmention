@@ -21,6 +21,11 @@ public class InMemoryClientStore implements ClientStore {
     }
 
     @Override
+    public Set<OAuthClient> getClients(int page, int size, String orderByColumn, boolean ascending) {
+        return new HashSet<>(clients.values());
+    }
+
+    @Override
     public void disableClient(String clientId) {
         clients.computeIfPresent(clientId, (k, client) -> new OAuthClient(client.clientId(), client.hashedClientSecret(), client.scopes(), false));
     }

@@ -2,7 +2,10 @@ package no.clueless.oauth;
 
 import org.mindrot.jbcrypt.BCrypt;
 
+import java.util.Arrays;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public interface ClientStore {
     /**
@@ -14,19 +17,33 @@ public interface ClientStore {
     OAuthClient getClient(String clientId);
 
     /**
+     * Returns a paged list of OAuthClients.
+     *
+     * @param page          0-based page number.
+     * @param size          Page size.
+     * @param orderByColumn Column to order by.
+     * @param ascending     Whether to order ascending or descending.
+     * @return A paged list of OAuthClients.
+     */
+    Set<OAuthClient> getClients(int page, int size, String orderByColumn, boolean ascending);
+
+    /**
      * Disables the OAuthClient with the given clientId.
+     *
      * @param clientId the client id to disable
      */
     void disableClient(String clientId);
 
     /**
      * Enables the OAuthClient with the given clientId.
+     *
      * @param clientId the client id to enable
      */
     void enableClient(String clientId);
 
     /**
      * Deletes the OAuthClient with the given clientId.
+     *
      * @param clientId the client id to delete
      */
     void deleteClient(String clientId);
@@ -61,24 +78,16 @@ public interface ClientStore {
     }
 
     /**
-     * Seeds the client store with an initial client..
-     *
-     * @param clientId     the client id
-     * @param clientSecret the client secret
-     * @param scopes       the client scopes
-     * @throws IllegalArgumentException if clientId, clientSecret or scopes is null or empty.
+     * Seeds the client store with an initial client.
      */
-    default void seedInitialClient(String clientId, String clientSecret, Set<Scope> scopes) {
-        if (clientId == null || clientId.isBlank()) {
-            throw new IllegalArgumentException("clientId cannot be null or blank");
-        }
-        if (clientSecret == null || clientSecret.isBlank()) {
-            throw new IllegalArgumentException("clientSecret cannot be null or blank");
-        }
-        if (scopes == null || scopes.isEmpty()) {
-            throw new IllegalArgumentException("scopes cannot be null or empty");
-        }
-
+    default void seedInitialClient() {
+        final var clientId     = Optional.ofNullable(System.getenv("WEBMENTION_INITIAL_CLIENT_ID")).filter(value -> !value.isBlank()).orElseThrow(() -> new IllegalStateException("WEBMENTION_INITIAL_CLIENT_ID must be set"));
+        final var clientSecret = Optional.ofNullable(System.getenv("WEBMENTION_INITIAL_CLIENT_SECRET")).filter(value -> !value.isBlank()).orElseThrow(() -> new IllegalStateException("WEBMENTION_INITIAL_CLIENT_SECRET must be set"));
+        final var scopes = Optional.ofNullable(System.getenv("WEBMENTION_INITIAL_CLIENT_SCOPES")).filter(value -> !value.isBlank())
+                .map(Scope::fromLabel)
+                .map(Optional::stream)
+                .map(stream -> stream.collect(Collectors.toSet()))
+                .orElseThrow(() -> new IllegalStateException("WEBMENTION_INITIAL_CLIENT_SCOPES must be set"));
         registerClient(clientId, clientSecret, scopes);
     }
 
@@ -88,4 +97,26 @@ public interface ClientStore {
      * @return true if the client store should seed an initial client, false otherwise.
      */
     boolean shouldSeedInitialClient();
+
+    /**
+     * Checks if the client store has seed credentials.
+     *
+     * @return true if the client store has seed credentials, false otherwise.
+     */
+    default boolean hasSeedCredentials() {
+        var initialClientId     = System.getenv("WEBMENTION_INITIAL_CLIENT_ID");
+        var initialClientSecret = System.getenv("WEBMENTION_INITIAL_CLIENT_SECRET");
+        var initialClientScopes = System.getenv("WEBMENTION_INITIAL_CLIENT_SCOPES");
+
+        return initialClientId != null &&
+                !initialClientId.isBlank() &&
+                initialClientSecret != null &&
+                !initialClientSecret.isBlank() &&
+                initialClientScopes != null &&
+                !initialClientScopes.isBlank() && Arrays.stream(initialClientScopes.trim().split("\\s+"))
+                .map(Scope::fromLabel)
+                .flatMap(Optional::stream)
+                .findAny()
+                .isPresent();
+    }
 }

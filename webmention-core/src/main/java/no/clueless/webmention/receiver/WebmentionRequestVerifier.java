@@ -54,23 +54,4 @@ public class WebmentionRequestVerifier {
             throw new WebmentionException("Invalid URL format: " + e.getMessage(), e);
         }
     }
-
-    public static class Builder {
-        private WebmentionTargetVerifier targetVerifier;
-
-        private Builder() {}
-
-        public Builder targetVerifier(WebmentionTargetVerifier targetVerifier) {
-            this.targetVerifier = targetVerifier;
-            return this;
-        }
-
-        public WebmentionRequestVerifier build() {
-            return new WebmentionRequestVerifier(targetVerifier);
-        }
-    }
-
-    public static Builder newBuilder() {
-        return new Builder();
-    }
 }

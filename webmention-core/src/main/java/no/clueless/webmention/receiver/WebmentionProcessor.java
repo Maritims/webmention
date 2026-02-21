@@ -51,6 +51,17 @@ public class WebmentionProcessor {
         this.maxQueueSize          = maxQueueSize;
     }
 
+    /**
+     * Constructor with default values.
+     *
+     * @param webmentionRateLimiter the rate limiter
+     * @param webmentionReceiver    the receiver
+     * @see #WebmentionProcessor(WebmentionRateLimiter, WebmentionReceiver, int, int)
+     */
+    public WebmentionProcessor(WebmentionRateLimiter webmentionRateLimiter, WebmentionReceiver webmentionReceiver) {
+        this(webmentionRateLimiter, webmentionReceiver, 5, 5000);
+    }
+
     private void processNext() {
         try {
             var task = queue.poll();
@@ -106,43 +117,5 @@ public class WebmentionProcessor {
         } catch (InterruptedException e) {
             scheduler.shutdownNow();
         }
-    }
-
-    public static class Builder {
-        private WebmentionRateLimiter rateLimiter;
-        private WebmentionReceiver    receiver;
-        private int                   intervalInSeconds = 5;
-        private int                   maxQueueSize      = 5000;
-
-        private Builder() {
-        }
-
-        public Builder rateLimiter(WebmentionRateLimiter rateLimiter) {
-            this.rateLimiter = Objects.requireNonNull(rateLimiter, "rateLimiter cannot be null");
-            return this;
-        }
-
-        public Builder receiver(WebmentionReceiver receiver) {
-            this.receiver = Objects.requireNonNull(receiver, "receiver cannot be null");
-            return this;
-        }
-
-        public Builder intervalInSeconds(int intervalInSeconds) {
-            this.intervalInSeconds = intervalInSeconds;
-            return this;
-        }
-
-        public Builder maxQueueSize(int maxQueueSize) {
-            this.maxQueueSize = maxQueueSize;
-            return this;
-        }
-
-        public WebmentionProcessor build() {
-            return new WebmentionProcessor(rateLimiter, receiver, intervalInSeconds, maxQueueSize);
-        }
-    }
-
-    public static Builder newBuilder() {
-        return new Builder();
     }
 }

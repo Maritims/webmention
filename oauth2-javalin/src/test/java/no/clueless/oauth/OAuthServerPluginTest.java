@@ -11,20 +11,18 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class OAuthServerPluginTest {
     ClientStore clientStore;
+    Javalin     app;
 
     @BeforeEach
     void setUp() {
         clientStore = new InMemoryClientStore();
+        clientStore.registerClient("test-id", "test-secret", Set.of(Scope.WEBMENTIONS_MANAGE));
+        app = Javalin.create(config -> config.registerPlugin(new OAuthServerPlugin(clientStore, (client, scopes) -> "fake-jwt")));
     }
 
     @Test
     void shouldReturnTokenForValidBasicAuth() {
-        clientStore.registerClient("test-id", "test-secret", Set.of(Scope.WEBMENTIONS_MANAGE));
-
-        var app = Javalin.create(config -> config.registerPlugin(new OAuthServerPlugin(oauth -> {
-            oauth.clientStore    = clientStore;
-            oauth.tokenGenerator = (client, scopes) -> "fake-jwt";
-        })));
+        var app = Javalin.create(config -> config.registerPlugin(new OAuthServerPlugin(clientStore, (client, scopes) -> "fake-jwt")));
 
         JavalinTest.test(app, (server, httpClient) -> {
             var response = httpClient.post("/oauth/token", "grant_type=client_credentials&client_id=test-id&client_secret=test-secret", req -> {
@@ -43,7 +41,7 @@ class OAuthServerPluginTest {
 
     @Test
     void shouldReturnUnauthorizedForInvalidSecret() {
-        var app = Javalin.create(config -> config.registerPlugin(new OAuthServerPlugin(oauth -> oauth.clientStore = clientStore)));
+        var app = Javalin.create(config -> config.registerPlugin(new OAuthServerPlugin(clientStore, (client, scopes) -> "fake-jwt")));
 
         JavalinTest.test(app, (server, httpClient) -> {
             var response     = httpClient.post("/oauth/token", "grant_type=client_credentials&client_id=test-id&client_secret=invalid-secret", req -> req.header("Content-Type", "application/x-www-form-urlencoded"));
@@ -57,7 +55,6 @@ class OAuthServerPluginTest {
 
     @Test
     void shouldReturnBadRequestForUnsupportedGrantType() {
-        var app = Javalin.create(config -> config.registerPlugin(new OAuthServerPlugin(oauth -> oauth.clientStore = clientStore)));
         JavalinTest.test(app, (server, httpClient) -> {
             var response     = httpClient.post("/oauth/token", "grant_type=invalid&client_id=test-id&client_secret=test-secret", req -> req.header("Content-Type", "application/x-www-form-urlencoded"));
             var responseBody = response.body();

@@ -141,24 +141,4 @@ public class WebmentionEndpointDiscoverer {
 
         return discover(targetUri, httpResponse);
     }
-
-    public static class Builder {
-        private SecureHttpClient httpClient;
-
-        private Builder() {
-        }
-
-        public Builder httpClient(SecureHttpClient httpClient) {
-            this.httpClient = httpClient;
-            return this;
-        }
-
-        public WebmentionEndpointDiscoverer build() {
-            return new WebmentionEndpointDiscoverer(httpClient);
-        }
-    }
-
-    public static Builder newBuilder() {
-        return new Builder();
-    }
 }

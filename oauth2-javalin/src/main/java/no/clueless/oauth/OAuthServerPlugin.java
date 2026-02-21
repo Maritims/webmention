@@ -5,12 +5,10 @@ import io.javalin.http.BadRequestResponse;
 import io.javalin.http.UnauthorizedResponse;
 import io.javalin.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static io.javalin.apibuilder.ApiBuilder.*;
@@ -18,168 +16,107 @@ import static io.javalin.apibuilder.ApiBuilder.*;
 /**
  * A Javalin plugin acting as an OAuth 2.0 Authorization Server.
  */
-public class OAuthServerPlugin extends Plugin<OAuthServerPlugin.Config> {
+public class OAuthServerPlugin extends Plugin<Void> {
     private static final Logger log = LoggerFactory.getLogger(OAuthServerPlugin.class);
 
-    /**
-     * Configuration for the OAuth server plugin.
-     */
-    public static class Config {
-        /**
-         * The path to the token endpoint. Defaults to "/oauth/token".
-         */
-        public String         tokenPath                  = "/oauth/token";
-        /**
-         * The client store.
-         */
-        public ClientStore    clientStore;
-        /**
-         * The token generator.
-         */
-        public TokenGenerator tokenGenerator;
-        public int            accessTokenValiditySeconds = 3600;
-        public String         initialClientId            = System.getenv("WEBMENTION_INITIAL_CLIENT_ID");
-        public String         initialClientSecret        = System.getenv("WEBMENTION_INITIAL_CLIENT_SECRET");
-        public String         initialClientScopes        = System.getenv("WEBMENTION_INITIAL_CLIENT_SCOPES");
+    private final String         tokenPath;
+    private final ClientStore    clientStore;
+    private final TokenGenerator tokenGenerator;
+    private final long           accessTokenValiditySeconds;
 
+    /**
+     * Constructor.
+     *
+     * @param tokenPath                    the token path
+     * @param accessTokenValidityInSeconds the access token validity in seconds
+     * @param clientStore                  the client store
+     * @param tokenGenerator               the token generator
+     * @throws IllegalArgumentException if clientStore or tokenGenerator is null
+     */
+    public OAuthServerPlugin(String tokenPath, long accessTokenValidityInSeconds, ClientStore clientStore, TokenGenerator tokenGenerator) {
+        if (clientStore == null) {
+            throw new IllegalArgumentException("clientStore cannot be null");
+        }
+        if (tokenGenerator == null) {
+            throw new IllegalArgumentException("tokenGenerator cannot be null");
+        }
+
+        this.tokenPath                  = tokenPath == null || tokenPath.isBlank() ? "/oauth/token" : tokenPath;
+        this.accessTokenValiditySeconds = accessTokenValidityInSeconds < 1 ? 3600 : accessTokenValidityInSeconds;
+        this.clientStore                = clientStore;
+        this.tokenGenerator             = tokenGenerator;
     }
 
-    public OAuthServerPlugin(@Nullable Consumer<Config> userConfig) {
-        super(userConfig, new Config());
+    /**
+     * Constructor with default values.
+     *
+     * @param clientStore    the client store
+     * @param tokenGenerator the token generator
+     * @see #OAuthServerPlugin(String, long, ClientStore, TokenGenerator)
+     */
+    public OAuthServerPlugin(ClientStore clientStore, TokenGenerator tokenGenerator) {
+        this("/oauth/token", 3600, clientStore, tokenGenerator);
     }
 
     @Override
     public void onInitialize(@NotNull JavalinConfig config) {
-        if (pluginConfig.clientStore.shouldSeedInitialClient()) {
+        if (clientStore.shouldSeedInitialClient() && clientStore.hasSeedCredentials()) {
             log.debug("Seeding initial client");
-
-            if (pluginConfig.initialClientId == null || pluginConfig.initialClientId.isBlank()) {
-                throw new RuntimeException("Unable to seed initial client: Missing environment variable WEBMENTION_INITIAL_CLIENT_ID");
-            }
-            if (pluginConfig.initialClientSecret == null || pluginConfig.initialClientSecret.isBlank()) {
-                throw new RuntimeException("Unable to seed initial client: Missing environment variable WEBMENTION_INITIAL_CLIENT_SECRET");
-            }
-            if (pluginConfig.initialClientScopes == null || pluginConfig.initialClientScopes.isBlank()) {
-                throw new RuntimeException("Unable to seed initial client: Missing environment variable WEBMENTION_INITIAL_CLIENT_SCOPES");
-            }
-
-            var initialClientScopes = Arrays.stream(pluginConfig.initialClientScopes.trim().split("\\s+"))
-                    .map(Scope::fromLabel)
-                    .flatMap(Optional::stream)
-                    .collect(Collectors.toSet());
-            pluginConfig.clientStore.seedInitialClient(pluginConfig.initialClientId, pluginConfig.initialClientSecret, initialClientScopes);
-        } else {
-            if (pluginConfig.initialClientId != null) {
-                throw new RuntimeException("Potential security risk detected! WEBMENTION_INITIAL_CLIENT_ID is set but client seeding is not needed. Unset WEBMENTION_INITIAL_CLIENT_ID and restart the application");
-            }
-            if (pluginConfig.initialClientSecret != null) {
-                throw new RuntimeException("Potential security risk detected! WEBMENTION_INITIAL_CLIENT_SECRET is set but client seeding is not needed. Unset WEBMENTION_INITIAL_CLIENT_SECRET and restart the application");
-            }
-            if (pluginConfig.initialClientScopes != null) {
-                throw new RuntimeException("Potential security risk detected! WEBMENTION_INITIAL_CLIENT_SCOPES is set but client seeding is not needed. Unset WEBMENTION_INITIAL_CLIENT_SCOPES and restart the application");
-            }
+            clientStore.seedInitialClient();
+        } else if (clientStore.shouldSeedInitialClient()) {
+            throw new IllegalStateException("Seeding initial client is enabled but no seed credentials have been provided. Please set WEBMENTION_INITIAL_CLIENT_ID, WEBMENTION_INITIAL_CLIENT_SECRET and WEBMENTION_INITIAL_CLIENT_SCOPES to seed the initial client");
         }
 
         config.router.mount(router -> {
-        }).apiBuilder(() -> {
-            post(pluginConfig.tokenPath, ctx -> {
-                var grantType = ctx.formParam("grant_type");
-                if (!"client_credentials".equals(grantType)) {
-                    throw new BadRequestResponse("unsupported_grant_type");
+        }).apiBuilder(() -> post(tokenPath, ctx -> {
+            var grantType = ctx.formParam("grant_type");
+            if (!"client_credentials".equals(grantType)) {
+                throw new BadRequestResponse("unsupported_grant_type");
+            }
+
+            var clientId     = ctx.formParam("client_id");
+            var clientSecret = ctx.formParam("client_secret");
+
+            var authorizationHeader = ctx.header("Authorization");
+            if (authorizationHeader != null && authorizationHeader.startsWith("Basic ")) {
+                var base64EncodedToken = authorizationHeader.substring(6);
+                var decodedToken       = new String(Base64.getDecoder().decode(base64EncodedToken));
+                var parts              = decodedToken.split(":", 2);
+                clientId     = parts[0];
+                clientSecret = parts[1];
+            }
+
+            if (!clientStore.authenticate(clientId, clientSecret)) {
+                throw new UnauthorizedResponse("invalid_client");
+            }
+
+            var client = Optional.ofNullable(clientStore.getClient(clientId))
+                    .filter(OAuthClient::isEnabled)
+                    .orElseThrow(() -> new BadRequestResponse("invalid_client"));
+
+            Set<Scope> finalScopes;
+            var        scopeParameter = ctx.formParam("scope");
+            if (scopeParameter == null || scopeParameter.isBlank()) {
+                finalScopes = client.scopes() == null ? Collections.emptySet() : client.scopes().stream().map(Scope::fromLabel).flatMap(Optional::stream).collect(Collectors.toSet());
+            } else {
+                var requestedLabels = Arrays.stream(scopeParameter.split("\\s+")).collect(Collectors.toSet());
+                finalScopes = requestedLabels.stream()
+                        .map(Scope::fromLabel)
+                        .flatMap(Optional::stream)
+                        .collect(Collectors.toSet());
+
+                if (finalScopes.size() != requestedLabels.size() || !client.scopes().containsAll(requestedLabels)) {
+                    throw new BadRequestResponse("invalid_scope");
                 }
+            }
 
-                var clientId     = ctx.formParam("client_id");
-                var clientSecret = ctx.formParam("client_secret");
-
-                var authorizationHeader = ctx.header("Authorization");
-                if (authorizationHeader != null && authorizationHeader.startsWith("Basic ")) {
-                    var base64EncodedToken = authorizationHeader.substring(6);
-                    var decodedToken       = new String(java.util.Base64.getDecoder().decode(base64EncodedToken));
-                    var parts              = decodedToken.split(":", 2);
-                    clientId     = parts[0];
-                    clientSecret = parts[1];
-                }
-
-                if (!pluginConfig.clientStore.authenticate(clientId, clientSecret)) {
-                    throw new UnauthorizedResponse("invalid_client");
-                }
-
-                var client = Optional.ofNullable(pluginConfig.clientStore.getClient(clientId))
-                        .filter(OAuthClient::isEnabled)
-                        .orElseThrow(() -> new BadRequestResponse("invalid_client"));
-
-                Set<Scope> finalScopes;
-                var        scopeParameter = ctx.formParam("scope");
-                if (scopeParameter == null || scopeParameter.isBlank()) {
-                    finalScopes = client.scopes() == null ? Collections.emptySet() : client.scopes().stream().map(Scope::fromLabel).flatMap(Optional::stream).collect(Collectors.toSet());
-                } else {
-                    var requestedLabels = Arrays.stream(scopeParameter.split("\\s+")).collect(Collectors.toSet());
-                    finalScopes = requestedLabels.stream()
-                            .map(Scope::fromLabel)
-                            .flatMap(Optional::stream)
-                            .collect(Collectors.toSet());
-
-                    if (finalScopes.size() != requestedLabels.size() || !client.scopes().containsAll(requestedLabels)) {
-                        throw new BadRequestResponse("invalid_scope");
-                    }
-                }
-
-                var token = pluginConfig.tokenGenerator.generate(client, finalScopes);
-                ctx.json(Map.of(
-                        "access_token", token,
-                        "token_type", "Bearer",
-                        "expires_in", pluginConfig.accessTokenValiditySeconds,
-                        "scope", finalScopes.stream().map(Scope::getLabel).collect(Collectors.joining(" "))
-                ));
-            });
-
-            path("clients", () -> {
-                post("", ctx -> {
-                    var clientId     = ctx.formParam("clientId");
-                    var clientSecret = ctx.formParam("clientSecret");
-                    var scopes       = ctx.formParam("scopes");
-
-                    if (clientId == null || clientId.isBlank()) {
-                        throw new BadRequestResponse("Missing clientId");
-                    }
-                    if (clientSecret == null || clientSecret.isBlank()) {
-                        throw new BadRequestResponse("Missing clientSecret");
-                    }
-                    if (scopes == null || scopes.isBlank()) {
-                        throw new BadRequestResponse("Missing scopes");
-                    }
-
-                    pluginConfig.clientStore.registerClient(clientId, clientSecret, Scope.fromLabels(scopes));
-                    ctx.status(201);
-                }, Scope.CLIENTS_MANAGE);
-
-                patch("disable/{clientId}", ctx -> {
-                    var clientId = ctx.pathParam("clientId");
-                    if (clientId.isBlank()) {
-                        throw new BadRequestResponse("clientId cannot be null or blank");
-                    }
-                    pluginConfig.clientStore.disableClient(clientId);
-                    ctx.status(204);
-                }, Scope.CLIENTS_MANAGE);
-
-                patch("enable/{clientId}", ctx -> {
-                    var clientId = ctx.pathParam("clientId");
-                    if (clientId.isBlank()) {
-                        throw new BadRequestResponse("clientId cannot be null or blank");
-                    }
-                    pluginConfig.clientStore.enableClient(clientId);
-                    ctx.status(204);
-                }, Scope.CLIENTS_MANAGE);
-
-                delete("{clientId}", ctx -> {
-                    var clientId = ctx.pathParam("clientId");
-                    if (clientId.isBlank()) {
-                        throw new BadRequestResponse("clientId cannot be null or blank");
-                    }
-                    pluginConfig.clientStore.deleteClient(clientId);
-                    ctx.status(204);
-                }, Scope.CLIENTS_MANAGE);
-            });
-        });
+            var token = tokenGenerator.generate(client, finalScopes);
+            ctx.json(Map.of(
+                    "access_token", token,
+                    "token_type", "Bearer",
+                    "expires_in", accessTokenValiditySeconds,
+                    "scope", finalScopes.stream().map(Scope::getLabel).collect(Collectors.joining(" "))
+            ));
+        }));
     }
 }

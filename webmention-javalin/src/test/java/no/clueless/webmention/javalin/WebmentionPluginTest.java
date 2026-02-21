@@ -35,15 +35,8 @@ class WebmentionPluginTest {
         when(webmentionRepository.getById(1)).thenReturn(Optional.of(webmention));
 
         app = Javalin.create(config -> {
-            config.registerPlugin(new OAuthResourceServerPlugin<>(oauth -> {
-                oauth.tokenValidator = tokenValidator;
-                oauth.scopeExtractor = scopeExtractor;
-            }));
-
-            config.registerPlugin(new WebmentionPlugin(webmentionConfig -> {
-                webmentionConfig.setWebmentionRepository(webmentionRepository);
-                webmentionConfig.setProcessor(mock(WebmentionProcessor.class));
-            }));
+            config.registerPlugin(new OAuthResourceServerPlugin<OAuthPrincipal>(tokenValidator, scopeExtractor));
+            config.registerPlugin(new WebmentionPlugin(mock(WebmentionProcessor.class), webmentionRepository));
         });
     }
 
