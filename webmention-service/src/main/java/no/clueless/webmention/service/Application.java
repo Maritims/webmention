@@ -1,20 +1,20 @@
 package no.clueless.webmention.service;
 
 import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.javalin.Javalin;
 import io.javalin.json.JavalinJackson;
-import no.clueless.oauth.DefaultJwtGenerator;
-import no.clueless.oauth.OAuthServerPlugin;
+import no.clueless.oauth.*;
 import no.clueless.webmention.WebmentionEndpointDiscoverer;
 import no.clueless.webmention.event.WebmentionEvent;
 import no.clueless.webmention.event.WebmentionReceivedSubscriber;
 import no.clueless.webmention.http.SecureHttpClient;
 import no.clueless.webmention.notifier.email.WebmentionEmailViaResendNotifier;
 import no.clueless.webmention.persistence.WebmentionRepository;
-import no.clueless.webmention.persistence.sqlite.SqlClientStore;
+import no.clueless.webmention.persistence.sqlite.SqliteClientStore;
 import no.clueless.webmention.persistence.sqlite.SqliteWebmentionRepository;
 import no.clueless.webmention.receiver.*;
 import no.clueless.webmention.javalin.WebmentionPlugin;
@@ -52,6 +52,8 @@ public class Application {
         onWebmentionReceived.subscribe(new WebmentionReceivedSubscriber<>((WebmentionRepository) webmentionRepository, webmentionNotifier));
         webmentionProcessor.start();
 
+        var defaultJwtManager = new DefaultJwtManager(Algorithm.HMAC256(jwtSecret), issuer, accessTokenValiditySeconds);
+
         var javalin = Javalin.create(config -> {
             config.jsonMapper(new JavalinJackson(new ObjectMapper()
                     .registerModule(new JavaTimeModule())
@@ -60,8 +62,13 @@ public class Application {
 
             config.registerPlugin(new OAuthServerPlugin(oauth -> {
                 oauth.tokenPath      = "/oauth/token";
-                oauth.tokenGenerator = new DefaultJwtGenerator(Algorithm.HMAC256(jwtSecret), issuer, accessTokenValiditySeconds);
-                oauth.clientStore    = new SqlClientStore(connectionString).initialize();
+                oauth.tokenGenerator = defaultJwtManager;
+                oauth.clientStore    = new SqliteClientStore(connectionString).initialize();
+            }));
+
+            config.registerPlugin(new OAuthResourceServerPlugin<DecodedJWT>(oauth -> {
+                oauth.scopeExtractor = null;
+                oauth.tokenValidator = defaultJwtManager;
             }));
 
             config.registerPlugin(new WebmentionPlugin(plugin -> {

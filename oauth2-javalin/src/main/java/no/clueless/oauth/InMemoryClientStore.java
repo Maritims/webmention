@@ -4,7 +4,11 @@ import org.mindrot.jbcrypt.BCrypt;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
+/**
+ * An in-memory implementation of the ClientStore interface.
+ */
 public class InMemoryClientStore implements ClientStore {
     private final Map<String, OAuthClient> clients = new ConcurrentHashMap<>();
 
@@ -17,7 +21,7 @@ public class InMemoryClientStore implements ClientStore {
     }
 
     @Override
-    public void registerClient(String clientId, String clientSecret, String... scopes) {
+    public void registerClient(String clientId, String clientSecret, Set<Scope> scopes) {
         if (clientId == null || clientId.isBlank()) {
             throw new IllegalArgumentException("clientId cannot be null or blank");
         }
@@ -26,6 +30,13 @@ public class InMemoryClientStore implements ClientStore {
         }
 
         var hashedSecret = BCrypt.hashpw(clientSecret, BCrypt.gensalt());
-        clients.put(clientId, new OAuthClient(clientId, hashedSecret, scopes == null || scopes.length == 0 ? null : new HashSet<>(List.of(scopes)), true));
+        clients.put(clientId, new OAuthClient(clientId, hashedSecret, scopes.stream().map(Scope::getLabel).collect(Collectors.toSet()), true));
+    }
+
+    @Override
+    public boolean shouldSeedInitialClient() {
+        return clients.entrySet()
+                .stream()
+                .noneMatch(entry -> entry.getValue().isEnabled() && entry.getValue().scopes().contains(Scope.WEBMENTIONS_MANAGE.getLabel()));
     }
 }

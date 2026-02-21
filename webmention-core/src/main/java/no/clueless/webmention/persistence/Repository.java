@@ -4,6 +4,8 @@ import no.clueless.webmention.persistence.sqlite.CreateNewEntity;
 import no.clueless.webmention.persistence.sqlite.FindExistingEntity;
 import no.clueless.webmention.persistence.sqlite.UpdateExistingEntity;
 
+import java.util.Optional;
+
 public interface Repository<TEntity extends Entity<TId>, TId> {
     Repository<TEntity, TId> initialize();
 
@@ -17,7 +19,7 @@ public interface Repository<TEntity extends Entity<TId>, TId> {
 
     Integer count();
 
-    TEntity getById(TId id);
+    Optional<TEntity> getById(TId id);
 
     TEntity create(TEntity entity);
 

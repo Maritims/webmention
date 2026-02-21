@@ -4,12 +4,11 @@ import no.clueless.webmention.persistence.Entity;
 import no.clueless.webmention.persistence.Repository;
 import org.slf4j.Logger;
 
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.*;
+import java.util.Optional;
+
+import static no.clueless.webmention.persistence.sqlite.SqliteDatabasePathVerifier.extractAbsoluteDatabasePath;
+import static no.clueless.webmention.persistence.sqlite.SqliteDatabasePathVerifier.verifyDatabasePath;
 
 abstract public class SqliteBaseRepository<TEntity extends Entity<Integer>> implements Repository<TEntity, Integer> {
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(SqliteBaseRepository.class);
@@ -66,11 +65,11 @@ abstract public class SqliteBaseRepository<TEntity extends Entity<Integer>> impl
     }
 
     @Override
-    public final TEntity getById(Integer id) {
+    public final Optional<TEntity> getById(Integer id) {
         try (var connection = DriverManager.getConnection(connectionString)) {
             var statement = prepareFindByIdStatement(connection, id);
             var resultSet = statement.executeQuery();
-            return resultSet.next() ? mapFromResultSet(resultSet) : null;
+            return resultSet.next() ? Optional.ofNullable(mapFromResultSet(resultSet)) : Optional.empty();
         } catch (SQLException e) {
             throw new RuntimeException("Failed to connect to database", e);
         }
@@ -86,7 +85,7 @@ abstract public class SqliteBaseRepository<TEntity extends Entity<Integer>> impl
             var statement = prepareCreateStatement(connection, entity);
             statement.executeUpdate();
             var id = statement.getGeneratedKeys().getInt(1);
-            return getById(id);
+            return getById(id).orElseThrow(() -> new RuntimeException("Failed to create entity of type " + entity.getClass()));
         } catch (SQLException e) {
             throw new RuntimeException("Failed to connect to database", e);
         }
@@ -102,7 +101,7 @@ abstract public class SqliteBaseRepository<TEntity extends Entity<Integer>> impl
             var statement = prepareUpdateStatement(connection, entity);
             statement.executeUpdate();
 
-            return getById(entity.id());
+            return getById(entity.id()).orElse(null);
         } catch (SQLException e) {
             throw new RuntimeException("Failed to connect to database", e);
         }
@@ -137,53 +136,5 @@ abstract public class SqliteBaseRepository<TEntity extends Entity<Integer>> impl
             existingEntity = updateExistingEntity.updateWithSomethingFromEntity(existingEntity, entityWithChanges);
             return update(existingEntity);
         }
-    }
-
-    /**
-     * Extracts the last part of the connection string, which is the path to the database file.
-     *
-     * @param connectionString The connection string.
-     * @return The path to the database file.
-     */
-    static Path extractAbsoluteDatabasePath(String connectionString) {
-        if (connectionString == null || connectionString.isBlank()) {
-            throw new IllegalArgumentException("connectionString cannot be null or empty");
-        }
-        if (!connectionString.startsWith("jdbc:sqlite:")) {
-            throw new IllegalArgumentException("connectionString must start with jdbc:sqlite:, but was " + connectionString);
-        }
-
-        var rawPath     = connectionString.replaceFirst("^(jdbc:)?sqlite:", "");
-        var decodedPath = URLDecoder.decode(rawPath, StandardCharsets.UTF_8);
-        return Paths.get(decodedPath).normalize();
-    }
-
-    /**
-     * Verify that the database directory path exists and is writable.
-     *
-     * @param databaseFilePath The path to the database file. Cannot be null nor a directory.
-     * @return True if the database directory path exists and is writable.
-     * @throws IllegalArgumentException If the database file path is null, does not end with .db or is a directory.
-     */
-    static boolean verifyDatabasePath(Path databaseFilePath) {
-        if (databaseFilePath == null) {
-            throw new IllegalArgumentException("databasePath cannot be null");
-        }
-        if (!databaseFilePath.toString().endsWith(".db")) {
-            throw new IllegalArgumentException("databasePath must end with .db, but was " + databaseFilePath);
-        }
-        if (Files.isDirectory(databaseFilePath)) {
-            throw new IllegalArgumentException("databasePath must be a file, but was a directory: " + databaseFilePath);
-        }
-
-        var databaseDirPath = databaseFilePath.toAbsolutePath().getParent();
-        if (!Files.exists(databaseDirPath)) {
-            throw new IllegalArgumentException("Database directory does not exist: " + databaseDirPath);
-        }
-        if (!databaseDirPath.toFile().canWrite()) {
-            throw new IllegalArgumentException("Cannot write to database directory " + databaseDirPath);
-        }
-
-        return true;
     }
 }

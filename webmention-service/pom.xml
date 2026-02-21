@@ -17,6 +17,10 @@
 
     <dependencies>
         <dependency>
+            <groupId>io.javalin</groupId>
+            <artifactId>javalin</artifactId>
+        </dependency>
+        <dependency>
             <groupId>no.clueless</groupId>
             <artifactId>webmention-javalin</artifactId>
             <version>${project.version}</version>

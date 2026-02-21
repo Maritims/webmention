@@ -7,7 +7,7 @@ import no.clueless.webmention.sender.WebmentionSender;
 import java.util.Set;
 
 public class WebmentionConfig {
-    private String               endpoint;
+    private String               endpoint = "/webmention";
     private WebmentionProcessor  webmentionProcessor;
     private WebmentionSender     sender;
     private WebmentionRepository webmentionRepository;
