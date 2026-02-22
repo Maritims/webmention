@@ -6,12 +6,16 @@ import no.clueless.oauth.*;
 import no.clueless.webmention.persistence.Webmention;
 import no.clueless.webmention.persistence.WebmentionRepository;
 import no.clueless.webmention.receiver.WebmentionProcessor;
+import okhttp3.Headers;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
@@ -20,6 +24,27 @@ import static org.mockito.Mockito.when;
 class WebmentionPluginTest {
     static final String administratorBearerToken = "foo";
     Javalin app;
+
+    public static Stream<Arguments> delete_webmentionManageId_shouldReturnExpectedStatusCodeByAuthorizationHeader() {
+        return Stream.of(
+                Arguments.of(null, 401),
+                Arguments.of(Headers.of("Authorization", "Bearer " + administratorBearerToken), 204)
+        );
+    }
+
+    public static Stream<Arguments> get_webmentionManage_shouldReturnExpectedStatusByAuthorizationHeader() {
+        return Stream.of(
+                Arguments.of(null, 401),
+                Arguments.of(Headers.of("Authorization", "Bearer " + administratorBearerToken), 200)
+        );
+    }
+
+    public static Stream<Arguments> patch_webmentionManagePublishId_shouldReturnExpectedStatusCodeByAuthorizationHeader() {
+        return Stream.of(
+                Arguments.of(null, 401),
+                Arguments.of(Headers.of("Authorization", "Bearer " + administratorBearerToken), 204)
+        );
+    }
 
     @BeforeEach
     void setUp() {
@@ -38,9 +63,8 @@ class WebmentionPluginTest {
         });
     }
 
-    @DisplayName("GET /webmention should return 200 for authorized users")
     @Test
-    void getWebmentionShouldReturnSuccessForUnauthorizedUsers() {
+    void get_webmention_shouldReturnSuccessForUnauthorizedUsers() {
         JavalinTest.test(app, (server, httpClient) -> {
             var response     = httpClient.get("/webmention");
             var responseBody = response.body();
@@ -49,9 +73,8 @@ class WebmentionPluginTest {
         });
     }
 
-    @DisplayName("POST /webmention should return 202 for authorized users")
     @Test
-    void postWebmentionShouldReturnSuccessForUnauthorizedUsers() {
+    void post_webmention_ShouldReturnSuccessForUnauthorizedUsers() {
         JavalinTest.test(app, (server, httpClient) -> {
             var response     = httpClient.post("/webmention", "source=foo&target=bar", req -> req.header("Content-Type", "application/x-www-form-urlencoded"));
             var responseBody = response.body();
@@ -62,69 +85,49 @@ class WebmentionPluginTest {
         });
     }
 
-    @DisplayName("GET /webmention/pending should return 401 for unauthorized users")
-    @Test
-    void getPendingWebmentionsShouldReturnUnauthorizedForUnauthorizedUsers() {
+    @ParameterizedTest
+    @MethodSource
+    void get_webmentionManage_shouldReturnExpectedStatusByAuthorizationHeader(Headers authorizationHeader, int expectedStatusCode) {
         JavalinTest.test(app, (server, httpClient) -> {
-            var response = httpClient.get("/webmention/pending");
-            assertEquals(401, response.code());
+            var response = httpClient.get("/webmention/manage", req -> Optional.ofNullable(authorizationHeader).ifPresent(req::headers));
+            assertEquals(expectedStatusCode, response.code());
         });
     }
 
-    @DisplayName("PATCH /webmention/pending/{id} should return 401 for unauthorized users")
-    @Test
-    void patchPendingWebmentionsShouldReturnUnauthorizedForUnauthorizedUsers() {
+    @ParameterizedTest
+    @MethodSource
+    void patch_webmentionManagePublishId_shouldReturnExpectedStatusCodeByAuthorizationHeader(Headers authorizationHeader, int expectedStatusCode) {
         JavalinTest.test(app, (server, httpClient) -> {
-            var response = httpClient.patch("/webmention/pending/1");
-            assertEquals(401, response.code());
+            var response = httpClient.patch("/webmention/manage/publish/1", "", req -> Optional.ofNullable(authorizationHeader).ifPresent(req::headers));
+            assertEquals(expectedStatusCode, response.code());
         });
     }
 
-    @DisplayName("GET /webmention/pending should return 200 for authorized users")
-    @Test
-    void getPendingWebmentionsShouldReturnSuccessForAuthorizedUsers() {
+    @ParameterizedTest
+    @MethodSource
+    void delete_webmentionManageId_shouldReturnExpectedStatusCodeByAuthorizationHeader(Headers authorizationHeader, int expectedStatusCode) {
         JavalinTest.test(app, (server, httpClient) -> {
-            var response     = httpClient.get("/webmention/pending", req -> req.header("Authorization", "Bearer " + administratorBearerToken));
+            var response = httpClient.delete("/webmention/manage/1", "", req -> Optional.ofNullable(authorizationHeader).ifPresent(req::headers));
             var responseBody = response.body();
             assertNotNull(responseBody);
 
             var responseString = responseBody.string();
-            assertEquals(200, response.code(), responseString);
+            assertEquals(expectedStatusCode, response.code(), "Unexpected response code: " + responseString);
         });
     }
 
-    @DisplayName("PATCH /webmention/pending/{id} should return 204 for authorized users")
     @Test
-    void patchPendingWebmentionsShouldReturnSuccessForAuthorizedUsers() {
+    void post_webmentionManage_shouldReturnNotFound() {
         JavalinTest.test(app, (server, httpClient) -> {
-            var response = httpClient.patch("/webmention/pending/1", "", req -> req.header("Authorization", "Bearer " + administratorBearerToken));
-            assertEquals(204, response.code());
-        });
-    }
-
-    @DisplayName("GET /webmention/pending should return 404 for unauthorized users")
-    @Test
-    void postPendingWebmentionsShouldReturnNotFound() {
-        JavalinTest.test(app, (server, httpClient) -> {
-            var response = httpClient.post("/webmention/pending");
+            var response = httpClient.post("/webmention/manage");
             assertEquals(404, response.code());
         });
     }
 
-    @DisplayName("DELETE /webmention/pending should return 404 for unauthorized users")
     @Test
-    void deletePendingWebmentionsShouldReturnNotFound() {
+    void put_webmentionManage_shouldReturnNotFound() {
         JavalinTest.test(app, (server, httpClient) -> {
-            var response = httpClient.delete("/webmention/pending");
-            assertEquals(404, response.code());
-        });
-    }
-
-    @DisplayName("PUT /webmention/pending should return 404 for unauthorized users")
-    @Test
-    void putPendingWebmentionsShouldReturnNotFound() {
-        JavalinTest.test(app, (server, httpClient) -> {
-            var response = httpClient.put("/webmention/pending");
+            var response = httpClient.put("/webmention/manage");
             assertEquals(404, response.code());
         });
     }

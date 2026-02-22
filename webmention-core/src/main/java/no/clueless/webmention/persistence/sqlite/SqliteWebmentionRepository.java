@@ -94,19 +94,8 @@ public class SqliteWebmentionRepository extends SqliteBaseRepository<Webmention>
         }
     }
 
-    protected long getCountByIsApproved(boolean isApproved) {
-        try (var connection = DriverManager.getConnection(connectionString)) {
-            var statement = connection.prepareStatement("SELECT COUNT(*) FROM webmentions WHERE isApproved = ?");
-            statement.setBoolean(1, isApproved);
-            var resultSet = statement.executeQuery();
-            resultSet.next();
-            return resultSet.getLong(1);
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to connect to database", e);
-        }
-    }
-
-    protected List<Webmention> getWebmentionsByIsApproved(int pageNumber, int pageSize, String orderByColumn, String orderDirection, boolean isApproved) {
+    @Override
+    public List<Webmention> getWebmentionsByIsApproved(int pageNumber, int pageSize, String orderByColumn, String orderDirection, Boolean isApproved) {
         if (pageSize < 1) {
             throw new IllegalArgumentException("pageSize must be greater than 0");
         }
@@ -126,9 +115,11 @@ public class SqliteWebmentionRepository extends SqliteBaseRepository<Webmention>
         var webmentions = new ArrayList<Webmention>();
 
         try (var connection = DriverManager.getConnection(connectionString)) {
-            var sql       = String.format("SELECT id, isApproved, sourceUrl, targetUrl, mentionText, created, updated FROM webmentions WHERE isApproved = ? ORDER BY %s %s LIMIT %d OFFSET %d", orderByColumn, orderDirection, pageSize, pageSize * pageNumber);
+            var sql       = isApproved == null ? String.format("SELECT * FROM webmentions ORDER BY %s %s LIMIT %d OFFSET %d", orderByColumn, orderDirection, pageSize, pageSize * pageNumber) : String.format("SELECT * FROM webmentions WHERE isApproved = ? ORDER BY %s %s LIMIT %d OFFSET %d", orderByColumn, orderDirection, pageSize, pageSize * pageNumber);
             var statement = connection.prepareStatement(sql);
-            statement.setBoolean(1, isApproved);
+            if (isApproved != null) {
+                statement.setBoolean(1, isApproved);
+            }
             var resultSet = statement.executeQuery();
 
             while (resultSet.next()) {
@@ -150,37 +141,32 @@ public class SqliteWebmentionRepository extends SqliteBaseRepository<Webmention>
     }
 
     @Override
-    public long getApprovedCount() {
-        return getCountByIsApproved(true);
-    }
-
-    @Override
-    public List<Webmention> getApprovedWebmentions(int pageNumber, int pageSize, String orderByColumn, String orderDirection) {
-        return getWebmentionsByIsApproved(pageNumber, pageSize, orderByColumn, orderDirection, true);
-    }
-
-    @Override
-    public long getUnapprovedCount() {
-        return getCountByIsApproved(false);
-    }
-
-    @Override
-    public List<Webmention> getUnapprovedWebmentions(int pageNumber, int pageSize, String orderByColumn, String orderByDirection) {
-        return getWebmentionsByIsApproved(pageNumber, pageSize, orderByColumn, orderByDirection, false);
-    }
-
-    @Override
-    public void approveWebmention(Webmention webmention) {
+    public void updateApproval(Webmention webmention, boolean isApproved) {
         if (webmention == null) {
             throw new IllegalArgumentException("webmention cannot be null");
         }
 
+        try (var connection = DriverManager.getConnection(connectionString)) {
+            var statement = connection.prepareStatement("UPDATE webmentions SET isApproved = ? WHERE id = ?");
+            statement.setBoolean(1, isApproved);
+            statement.setInt(2, webmention.id());
+            var result = statement.executeUpdate();
+            if (result == 0) {
+                throw new RuntimeException("Failed to update webmention");
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to connect to database", e);
+        }
+    }
+
+    @Override
+    public void deleteWebmention(int id) {
         try(var connection = DriverManager.getConnection(connectionString)) {
-            var statement = connection.prepareStatement("UPDATE webmentions SET isApproved = true WHERE id = ?");
-            statement.setInt(1, webmention.id());
+            var statement = connection.prepareStatement("DELETE FROM webmentions WHERE id = ?");
+            statement.setInt(1, id);
             var result = statement.executeUpdate();
             if(result == 0) {
-                throw new RuntimeException("Failed to update webmention");
+                throw new RuntimeException("Failed to delete webmention");
             }
         } catch (SQLException e) {
             throw new RuntimeException("Failed to connect to database", e);

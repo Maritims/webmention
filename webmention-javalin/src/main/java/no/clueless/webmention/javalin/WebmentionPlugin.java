@@ -119,15 +119,16 @@ public class WebmentionPlugin extends Plugin<Void> {
             }
 
             path(endpoint, () -> {
-                path("pending", () -> {
+                path("manage", () -> {
                     get(ctx -> {
                         var pageNumber            = ctx.queryParamAsClass("pageNumber", Integer.class).getOrDefault(0);
                         var pageSize              = ctx.queryParamAsClass("pageSize", Integer.class).getOrDefault(10);
-                        var unapprovedWebmentions = webmentionRepository.getUnapprovedWebmentions(pageNumber, pageSize);
+                        var isApproved            = ctx.queryParamAsClass("isApproved", Boolean.class).allowNullable().get();
+                        var unapprovedWebmentions = webmentionRepository.getWebmentionsByIsApproved(pageNumber, pageSize, "id", "desc", isApproved);
                         ctx.json(unapprovedWebmentions);
                     }, Scope.WEBMENTIONS_MANAGE);
 
-                    patch("{webmentionId}", ctx -> {
+                    patch("publish/{webmentionId}", ctx -> {
                         var webmentionId = ctx.pathParamAsClass("webmentionId", Integer.class).getOrThrow(id -> new BadRequestResponse("webmentionId must be a valid integer"));
                         var webmention   = webmentionRepository.getById(webmentionId).orElseThrow(() -> new NotFoundResponse("Webmention not found"));
 
@@ -135,7 +136,25 @@ public class WebmentionPlugin extends Plugin<Void> {
                             throw new ConflictResponse("Webmention is already approved");
                         }
 
-                        webmentionRepository.approveWebmention(webmention);
+                        webmentionRepository.updateApproval(webmention, true);
+                        ctx.status(204);
+                    }, Scope.WEBMENTIONS_MANAGE);
+
+                    patch("unpublish/{webmentionId}", ctx -> {
+                        var webmentionId = ctx.pathParamAsClass("webmentionId", Integer.class).getOrThrow(id -> new BadRequestResponse("webmentionId must be a valid integer"));
+                        var webmention   = webmentionRepository.getById(webmentionId).orElseThrow(() -> new NotFoundResponse("Webmention not found"));
+
+                        if (!webmention.isApproved()) {
+                            throw new ConflictResponse("Webmention is already unapproved");
+                        }
+
+                        webmentionRepository.updateApproval(webmention, false);
+                        ctx.status(204);
+                    }, Scope.WEBMENTIONS_MANAGE);
+
+                    delete("{webmentionId}", ctx -> {
+                        var webmention = ctx.pathParamAsClass("webmentionId", Integer.class).getOrThrow(id -> new BadRequestResponse("webmentionId must be a valid integer"));
+                        webmentionRepository.deleteWebmention(webmention);
                         ctx.status(204);
                     }, Scope.WEBMENTIONS_MANAGE);
                 });
@@ -153,7 +172,7 @@ public class WebmentionPlugin extends Plugin<Void> {
                     var pageSize            = ctx.queryParamAsClass("pageSize", Integer.class).getOrDefault(10);
                     var orderByColumn       = ctx.queryParamAsClass("orderByColumn", String.class).getOrDefault(webmentionRepository.getOrderByColumn());
                     var orderByDirection    = ctx.queryParamAsClass("orderByDirection", String.class).getOrDefault(webmentionRepository.getOrderByDirection());
-                    var approvedWebmentions = webmentionRepository.getApprovedWebmentions(pageNumber, pageSize, orderByColumn, orderByDirection);
+                    var approvedWebmentions = webmentionRepository.getWebmentionsByIsApproved(pageNumber, pageSize, orderByColumn, orderByDirection, true);
                     ctx.json(approvedWebmentions);
                 });
             });
