@@ -20,7 +20,7 @@ public class CommandProcessor {
      */
     public CommandProcessor() {
         commands.put("find-and-send-webmentions", FindAndSendWebmentions::new);
-        commands.put("get-pending-webmentions", GetPendingWebmentions::new);
+        commands.put("get-webmentions", GetWebmentions::new);
         commands.put("version", Version::new);
         commands.put("help", Help::new);
     }

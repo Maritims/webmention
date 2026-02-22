@@ -24,8 +24,8 @@ import java.util.Scanner;
 /**
  * Gets pending webmentions from a webmention endpoint.
  */
-public class GetPendingWebmentions implements Command {
-    private static final Logger       log          = org.slf4j.LoggerFactory.getLogger(GetPendingWebmentions.class);
+public class GetWebmentions implements Command {
+    private static final Logger       log          = org.slf4j.LoggerFactory.getLogger(GetWebmentions.class);
     private static final ObjectMapper objectMapper = new JsonMapper().registerModule(new JavaTimeModule());
 
     private final String clientId;
@@ -42,7 +42,7 @@ public class GetPendingWebmentions implements Command {
      * @param webmentionApiEndpoint the webmention API endpoint
      * @throws IllegalArgumentException if clientId, clientSecret, oauthTokenEndpoint, or webmentionApiEndpoint is null or blank.
      */
-    public GetPendingWebmentions(String clientId, String clientSecret, String oauthTokenEndpoint, String webmentionApiEndpoint) {
+    public GetWebmentions(String clientId, String clientSecret, String oauthTokenEndpoint, String webmentionApiEndpoint) {
         if (clientId == null || clientId.isBlank()) {
             throw new IllegalArgumentException("clientId cannot be null or blank");
         }
@@ -64,7 +64,7 @@ public class GetPendingWebmentions implements Command {
     /**
      * Default constructor. Reads client id, client secret, OAuth token endpoint and webmention API endpoint from environment variables.
      */
-    public GetPendingWebmentions() {
+    public GetWebmentions() {
         this.clientId              = System.getenv("WEBMENTION_CLIENT_ID");
         this.clientSecret          = System.getenv("WEBMENTION_CLIENT_SECRET");
         this.oauthTokenEndpoint    = System.getenv("WEBMENTION_OAUTH_TOKEN_ENDPOINT");
@@ -147,7 +147,7 @@ public class GetPendingWebmentions implements Command {
      * @throws IllegalArgumentException if httpClient, uri, accessToken, or webmentionApiEndpoint is null
      * @throws RuntimeException         if the HTTP request to the webmention API endpoint failed, or the response could not be parsed
      */
-    List<Webmention> getPendingWebmentions(HttpClient httpClient, URI uri, String accessToken) {
+    List<Webmention> getWebmentions(HttpClient httpClient, URI uri, String accessToken, int page, int size, Boolean isApproved) {
         if (httpClient == null) {
             throw new IllegalArgumentException("httpClient cannot be null");
         }
@@ -159,12 +159,14 @@ public class GetPendingWebmentions implements Command {
         }
 
         try {
+            uri = URI.create(uri + "?page=" + page + "&size=" + size + (isApproved == null ? "" : "&isApproved=" + isApproved));
             var httpRequest = HttpRequest.newBuilder()
                     .uri(uri)
                     .header("Authorization", "Bearer " + accessToken)
                     .GET()
                     .build();
 
+            log.debug("Fetching webmentions from {}", uri);
             var httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
             if (httpResponse.statusCode() == 204) {
                 log.info("No pending webmentions found");
@@ -173,8 +175,10 @@ public class GetPendingWebmentions implements Command {
             } else if (httpResponse.statusCode() == 404) {
                 log.error("Failed to fetch pending webmentions from {}. The endpoint was not found", uri);
             } else if (httpResponse.statusCode() == 200) {
-                return objectMapper.readValue(httpResponse.body(), new TypeReference<>() {
+                var webmentions = objectMapper.readValue(httpResponse.body(), new TypeReference<List<Webmention>>() {
                 });
+                log.debug("Fetched {} webmentions from {}", webmentions.size(), uri);
+                return webmentions;
             } else {
                 log.error("Failed to fetch pending webmentions. Status code was {} and response body was:\n{}", httpResponse.statusCode(), httpResponse.body());
             }
@@ -188,7 +192,10 @@ public class GetPendingWebmentions implements Command {
     }
 
     public CommandResult execute(String[] args) {
-        URI uri = null;
+        URI uri  = null;
+        var page = 0;
+        var size = 10;
+        Boolean isApproved = null;
 
         for (var i = 1; i < args.length; i++) {
             switch (args[i]) {
@@ -196,6 +203,24 @@ public class GetPendingWebmentions implements Command {
                     if (++i < args.length) {
                         uri = URI.create(args[i]);
                         log.debug("Setting uri to: {}", uri);
+                    }
+                }
+                case "--page", "-p" -> {
+                    if (++i < args.length) {
+                        page = Integer.parseInt(args[i]);
+                        log.debug("Setting page to: {}", page);
+                    }
+                }
+                case "--size", "-s" -> {
+                    if (++i < args.length) {
+                        size = Integer.parseInt(args[i]);
+                        log.debug("Setting size to: {}", size);
+                    }
+                }
+                case "--approved", "-a" -> {
+                    if (++i < args.length) {
+                        isApproved = Boolean.parseBoolean(args[i]);
+                        log.debug("Setting isApproved to: {}", isApproved);
                     }
                 }
                 default -> {
@@ -212,7 +237,7 @@ public class GetPendingWebmentions implements Command {
         var clientId              = Optional.ofNullable(this.clientId).filter(value -> !value.isBlank()).orElseGet(() -> readInput("client id", reader, false));
         var clientSecret          = Optional.ofNullable(this.clientSecret).filter(value -> !value.isBlank()).orElseGet(() -> readInput("client secret", reader, false));
         var oauthTokenEndpoint    = Optional.ofNullable(this.oauthTokenEndpoint).filter(value -> !value.isBlank()).orElseGet(() -> Optional.ofNullable(readInput("OAuth token endpoint (leave empty for default: /oauth/token)", reader, true)).filter(value -> !value.isBlank()).orElse("/oauth/token"));
-        var webmentionApiEndpoint = Optional.ofNullable(this.webmentionApiEndpoint).filter(value -> !value.isBlank()).orElseGet(() -> Optional.ofNullable(readInput("API endpoint (leave empty for default: /api/webmention)", reader, true)).filter(value -> !value.isBlank()).orElse("/api/webmention"));
+        var webmentionApiEndpoint = Optional.ofNullable(this.webmentionApiEndpoint).filter(value -> !value.isBlank()).orElseGet(() -> Optional.ofNullable(readInput("API endpoint (leave empty for default: /webmention/manage)", reader, true)).filter(value -> !value.isBlank()).orElse("/webmention/manage"));
 
         try (var httpClient = HttpClient.newBuilder().build()) {
             var accessToken = getAccessToken(httpClient, uri, clientId, clientSecret, oauthTokenEndpoint);
@@ -220,8 +245,8 @@ public class GetPendingWebmentions implements Command {
                 return CommandResult.FAILURE;
             }
 
-            var webmentions = getPendingWebmentions(httpClient, uri.resolve(webmentionApiEndpoint), accessToken);
-            webmentions.forEach(webmention -> log.info("Pending webmention: {} -> {} (id: {})", webmention.sourceUrl(), webmention.targetUrl(), webmention.id()));
+            var webmentions = getWebmentions(httpClient, uri.resolve(webmentionApiEndpoint), accessToken, page, size, isApproved);
+            webmentions.forEach(webmention -> log.info("Webmention #{}: {} -> {} (isApproved: {})", webmention.id(), webmention.sourceUrl(), webmention.targetUrl(), webmention.isApproved()));
         }
 
         return CommandResult.SUCCESS;

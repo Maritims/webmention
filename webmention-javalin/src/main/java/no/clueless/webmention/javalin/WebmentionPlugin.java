@@ -121,10 +121,10 @@ public class WebmentionPlugin extends Plugin<Void> {
             path(endpoint, () -> {
                 path("manage", () -> {
                     get(ctx -> {
-                        var pageNumber            = ctx.queryParamAsClass("pageNumber", Integer.class).getOrDefault(0);
-                        var pageSize              = ctx.queryParamAsClass("pageSize", Integer.class).getOrDefault(10);
+                        var page                  = ctx.queryParamAsClass("page", Integer.class).getOrDefault(0);
+                        var size                  = ctx.queryParamAsClass("size", Integer.class).getOrDefault(10);
                         var isApproved            = ctx.queryParamAsClass("isApproved", Boolean.class).allowNullable().get();
-                        var unapprovedWebmentions = webmentionRepository.getWebmentionsByIsApproved(pageNumber, pageSize, "id", "desc", isApproved);
+                        var unapprovedWebmentions = webmentionRepository.getWebmentionsByIsApproved(page, size, "id", "desc", isApproved);
                         ctx.json(unapprovedWebmentions);
                     }, Scope.WEBMENTIONS_MANAGE);
 

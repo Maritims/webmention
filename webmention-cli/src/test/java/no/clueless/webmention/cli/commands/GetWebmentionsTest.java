@@ -14,8 +14,8 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class GetPendingWebmentionsTest {
-    GetPendingWebmentions sut;
+class GetWebmentionsTest {
+    GetWebmentions sut;
 
     public static Stream<Arguments> executeShouldThrowIllegalArgumentExceptionWhenArgsAreInvalid() {
         return Stream.of(
@@ -34,7 +34,7 @@ class GetPendingWebmentionsTest {
 
     @BeforeEach
     void setUp() {
-        sut = new GetPendingWebmentions("foo", "bar", "baz", "loremipsum");
+        sut = new GetWebmentions("foo", "bar", "baz", "loremipsum");
     }
 
     @ParameterizedTest
