@@ -1,6 +1,8 @@
 package no.clueless.webmention.http;
 
 import no.clueless.webmention.ContentLengthExceededException;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.net.http.HttpResponse;
 import java.nio.ByteBuffer;
@@ -14,9 +16,11 @@ import java.util.concurrent.Flow;
  * @param <T> the type of the body
  */
 public class LimitedBodySubscriber<T> implements HttpResponse.BodySubscriber<T> {
+    @NotNull
     private final HttpResponse.BodySubscriber<T> downstream;
     private final long                           maxBytes;
     private       long                           bytesReceived = 0;
+    @Nullable
     private       Flow.Subscription              subscription;
 
     /**
@@ -25,7 +29,7 @@ public class LimitedBodySubscriber<T> implements HttpResponse.BodySubscriber<T> 
      * @param downstream the downstream subscriber
      * @param maxBytes   the maximum number of bytes to receive
      */
-    public LimitedBodySubscriber(HttpResponse.BodySubscriber<T> downstream, long maxBytes) {
+    public LimitedBodySubscriber(HttpResponse.@NotNull BodySubscriber<T> downstream, long maxBytes) {
         this.downstream = downstream;
         this.maxBytes   = maxBytes;
     }
@@ -48,7 +52,9 @@ public class LimitedBodySubscriber<T> implements HttpResponse.BodySubscriber<T> 
         }
 
         if (bytesReceived > maxBytes) {
-            subscription.cancel();
+            if(subscription != null) {
+                subscription.cancel();
+            }
             downstream.onError(new ContentLengthExceededException("Content length exceeded limit of " + maxBytes + " bytes"));
         } else {
             downstream.onNext(items);

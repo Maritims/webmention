@@ -5,6 +5,7 @@ import io.javalin.http.BadRequestResponse;
 import io.javalin.http.UnauthorizedResponse;
 import io.javalin.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,48 +14,25 @@ import java.util.stream.Collectors;
 
 import static io.javalin.apibuilder.ApiBuilder.*;
 
-/**
- * A Javalin plugin acting as an OAuth 2.0 Authorization Server.
- */
 public class OAuthServerPlugin extends Plugin<Void> {
     private static final Logger log = LoggerFactory.getLogger(OAuthServerPlugin.class);
 
+    @NotNull
     private final String         tokenPath;
+    @NotNull
     private final ClientStore    clientStore;
+    @NotNull
     private final TokenGenerator tokenGenerator;
     private final long           accessTokenValiditySeconds;
 
-    /**
-     * Constructor.
-     *
-     * @param tokenPath                    the token path
-     * @param accessTokenValidityInSeconds the access token validity in seconds
-     * @param clientStore                  the client store
-     * @param tokenGenerator               the token generator
-     * @throws IllegalArgumentException if clientStore or tokenGenerator is null
-     */
-    public OAuthServerPlugin(String tokenPath, long accessTokenValidityInSeconds, ClientStore clientStore, TokenGenerator tokenGenerator) {
-        if (clientStore == null) {
-            throw new IllegalArgumentException("clientStore cannot be null");
-        }
-        if (tokenGenerator == null) {
-            throw new IllegalArgumentException("tokenGenerator cannot be null");
-        }
-
+    public OAuthServerPlugin(@Nullable String tokenPath, long accessTokenValidityInSeconds, @NotNull ClientStore clientStore, @NotNull TokenGenerator tokenGenerator) {
         this.tokenPath                  = tokenPath == null || tokenPath.isBlank() ? "/oauth/token" : tokenPath;
         this.accessTokenValiditySeconds = accessTokenValidityInSeconds < 1 ? 3600 : accessTokenValidityInSeconds;
         this.clientStore                = clientStore;
         this.tokenGenerator             = tokenGenerator;
     }
 
-    /**
-     * Constructor with default values.
-     *
-     * @param clientStore    the client store
-     * @param tokenGenerator the token generator
-     * @see #OAuthServerPlugin(String, long, ClientStore, TokenGenerator)
-     */
-    public OAuthServerPlugin(ClientStore clientStore, TokenGenerator tokenGenerator) {
+    public OAuthServerPlugin(@NotNull ClientStore clientStore, @NotNull TokenGenerator tokenGenerator) {
         this("/oauth/token", 3600, clientStore, tokenGenerator);
     }
 
@@ -86,22 +64,27 @@ public class OAuthServerPlugin extends Plugin<Void> {
                 clientSecret = parts[1];
             }
 
-            if (!clientStore.authenticate(clientId, clientSecret)) {
+            if (clientId == null || clientId.isBlank() || clientSecret == null || clientSecret.isBlank() || !clientStore.authenticate(clientId, clientSecret)) {
                 throw new UnauthorizedResponse("invalid_client");
             }
 
-            var client = Optional.ofNullable(clientStore.getClient(clientId))
-                    .filter(OAuthClient::isEnabled)
-                    .orElseThrow(() -> new BadRequestResponse("invalid_client"));
+            var client = clientStore.getClient(clientId);
+            if (client == null || !client.isEnabled()) {
+                throw new BadRequestResponse("invalid_client");
+            }
 
             Set<Scope> finalScopes;
             var        scopeParameter = ctx.formParam("scope");
             if (scopeParameter == null || scopeParameter.isBlank()) {
-                finalScopes = client.scopes() == null ? Collections.emptySet() : client.scopes().stream().map(Scope::fromLabel).flatMap(Optional::stream).collect(Collectors.toSet());
+                finalScopes = client.scopes()
+                        .stream()
+                        .map(Scope::fromString)
+                        .flatMap(Optional::stream)
+                        .collect(Collectors.toSet());
             } else {
                 var requestedLabels = Arrays.stream(scopeParameter.split("\\s+")).collect(Collectors.toSet());
                 finalScopes = requestedLabels.stream()
-                        .map(Scope::fromLabel)
+                        .map(Scope::fromString)
                         .flatMap(Optional::stream)
                         .collect(Collectors.toSet());
 
@@ -111,7 +94,11 @@ public class OAuthServerPlugin extends Plugin<Void> {
             }
 
             var token = tokenGenerator.generate(client, finalScopes);
-            ctx.json(new TokenResponse(token, "Bearer", accessTokenValiditySeconds, finalScopes.stream().map(Scope::getLabel).collect(Collectors.joining(""))));
+            ctx.json(new TokenResponse(
+                    token,
+                    "Bearer",
+                    accessTokenValiditySeconds,
+                    finalScopes.stream().map(Scope::getLabel).collect(Collectors.joining(""))));
         }));
     }
 }

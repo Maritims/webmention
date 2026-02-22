@@ -5,45 +5,35 @@ import no.clueless.webmention.WebmentionEndpointDiscoverer;
 import no.clueless.webmention.WebmentionException;
 import no.clueless.webmention.http.SecureHttpClient;
 import no.clueless.webmention.http.WebmentionHttpRequestBuilder;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpResponse;
-import java.util.Objects;
 import java.util.Set;
 
 /**
  * A default implementation of {@link WebmentionTargetVerifier}.
  */
 public class DefaultWebmentionTargetVerifier implements WebmentionTargetVerifier {
+    @NotNull
     private final Set<String>                  supportedDomains;
+    @NotNull
     private final SecureHttpClient             httpClient;
+    @NotNull
     private final WebmentionEndpointDiscoverer discoverer;
 
-    /**
-     * Constructor.
-     *
-     * @param supportedDomains the set of supported domains which this verifier will accept webmentions for.
-     * @param httpClient       the HTTP client to use for fetching webmention endpoints.
-     * @param discoverer       the webmention endpoint discoverer to use for discovering webmention endpoints.
-     */
-    public DefaultWebmentionTargetVerifier(Set<String> supportedDomains, SecureHttpClient httpClient, WebmentionEndpointDiscoverer discoverer) {
-        this.supportedDomains = Objects.requireNonNull(supportedDomains, "supportedDomains cannot be null");
+    public DefaultWebmentionTargetVerifier(@NotNull Set<String> supportedDomains, @NotNull SecureHttpClient httpClient, @NotNull WebmentionEndpointDiscoverer discoverer) {
         if (supportedDomains.isEmpty()) {
             throw new IllegalArgumentException("supportedDomains cannot be empty");
         }
-        this.httpClient = Objects.requireNonNull(httpClient, "httpClient cannot be null");
-        this.discoverer = Objects.requireNonNull(discoverer, "discoverer cannot be null");
+        this.supportedDomains = supportedDomains;
+        this.httpClient       = httpClient;
+        this.discoverer       = discoverer;
     }
 
-    /**
-     * Fetches the given URI and returns the response.
-     *
-     * @param uri the URI to fetch
-     * @return the response
-     * @throws WebmentionException if the fetch failed
-     */
-    private HttpResponse<String> fetch(URI uri) throws WebmentionException {
+    @NotNull
+    private HttpResponse<String> fetch(@NotNull URI uri) throws WebmentionException {
         var httpRequest = WebmentionHttpRequestBuilder.newBuilder()
                 .uri(uri)
                 .GET()
@@ -63,15 +53,8 @@ public class DefaultWebmentionTargetVerifier implements WebmentionTargetVerifier
         return httpResponse;
     }
 
-    /**
-     * Verifies that the given URI is a valid webmention target.
-     *
-     * @param targetUri the URI to verify
-     * @return true if the URI is a valid webmention target, false otherwise
-     * @throws WebmentionException if the verification failed
-     */
     @Override
-    public boolean verify(URI targetUri) throws WebmentionException {
+    public boolean verify(@NotNull URI targetUri) throws WebmentionException {
         if (!supportedDomains.contains(targetUri.getHost())) {
             throw new WebmentionException("Target host " + targetUri.getHost() + " is not supported");
         }

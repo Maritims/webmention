@@ -21,15 +21,7 @@ import no.clueless.webmention.javalin.WebmentionPlugin;
 import java.time.Duration;
 import java.util.concurrent.SubmissionPublisher;
 
-/**
- * Application entry point.
- */
 public class Application {
-    /**
-     * Configures and starts the application.
-     *
-     * @param args the command line arguments
-     */
     public static void main(String[] args) {
         final var options                      = Options.fromEnvironment();
         final var httpClient                   = SecureHttpClient.newClient(Duration.ofMillis(options.connectTimeout()), !options.testMode());

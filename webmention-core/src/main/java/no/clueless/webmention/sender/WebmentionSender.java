@@ -6,6 +6,8 @@ import no.clueless.webmention.WebmentionEndpointDiscoverer;
 import no.clueless.webmention.WebmentionException;
 import no.clueless.webmention.http.SecureHttpClient;
 import no.clueless.webmention.http.WebmentionHttpRequestBuilder;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +18,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.SubmissionPublisher;
 import java.util.stream.Collectors;
 
@@ -25,17 +26,20 @@ import java.util.stream.Collectors;
  */
 public class WebmentionSender {
     private static final Logger                               log = LoggerFactory.getLogger(WebmentionSender.class);
+    @NotNull
     private final        SecureHttpClient                     httpClient;
+    @Nullable
     private final        SubmissionPublisher<HttpResponse<?>> onReceiverNotifiedPublisher;
+    @NotNull
     private final        WebmentionEndpointDiscoverer         webmentionEndpointDiscoverer;
 
-    public WebmentionSender(SecureHttpClient httpClient, SubmissionPublisher<HttpResponse<?>> onReceiverNotifiedPublisher, WebmentionEndpointDiscoverer webmentionEndpointDiscoverer) {
-        this.httpClient                   = Objects.requireNonNull(httpClient, "httpClient cannot be null");
+    public WebmentionSender(@NotNull SecureHttpClient httpClient, @Nullable SubmissionPublisher<HttpResponse<?>> onReceiverNotifiedPublisher, @NotNull WebmentionEndpointDiscoverer webmentionEndpointDiscoverer) {
+        this.httpClient                   = httpClient;
         this.onReceiverNotifiedPublisher  = onReceiverNotifiedPublisher;
-        this.webmentionEndpointDiscoverer = Objects.requireNonNull(webmentionEndpointDiscoverer, "webmentionEndpointDiscoverer cannot be null");
+        this.webmentionEndpointDiscoverer = webmentionEndpointDiscoverer;
     }
 
-    void notifyReceiver(String webmentionEndpoint, String sourceUrl, String targetUrl) {
+    void notifyReceiver(@NotNull String webmentionEndpoint, @NotNull String sourceUrl, @NotNull String targetUrl) {
         var formData    = Map.of("sourceUrl", sourceUrl, "targetUrl", targetUrl);
         var encodedForm = formData.entrySet().stream().map(entry -> entry.getKey() + "=" + URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8)).collect(Collectors.joining("&"));
         var httpRequest = WebmentionHttpRequestBuilder.newBuilder()
@@ -71,29 +75,42 @@ public class WebmentionSender {
     }
 
     public static class Builder {
+        @Nullable
         private SecureHttpClient                     httpClient;
+        @Nullable
         private SubmissionPublisher<HttpResponse<?>> submissionPublisher;
+        @Nullable
         private WebmentionEndpointDiscoverer         endpointDiscoverer;
 
         private Builder() {
         }
 
-        public Builder httpClient(SecureHttpClient httpClient) {
+        @NotNull
+        public Builder httpClient(@Nullable SecureHttpClient httpClient) {
             this.httpClient = httpClient;
             return this;
         }
 
-        public Builder submissionPublisher(SubmissionPublisher<HttpResponse<?>> submissionPublisher) {
+        @NotNull
+        public Builder submissionPublisher(@Nullable SubmissionPublisher<HttpResponse<?>> submissionPublisher) {
             this.submissionPublisher = submissionPublisher;
             return this;
         }
 
-        public Builder endpointDiscoverer(WebmentionEndpointDiscoverer endpointDiscoverer) {
+        @NotNull
+        public Builder endpointDiscoverer(@Nullable WebmentionEndpointDiscoverer endpointDiscoverer) {
             this.endpointDiscoverer = endpointDiscoverer;
             return this;
         }
 
+        @NotNull
         public WebmentionSender build() {
+            if (httpClient == null) {
+                throw new IllegalStateException("httpClient cannot be null");
+            }
+            if (endpointDiscoverer == null) {
+                throw new IllegalStateException("endpointDiscoverer cannot be null");
+            }
             return new WebmentionSender(httpClient, submissionPublisher, endpointDiscoverer);
         }
     }

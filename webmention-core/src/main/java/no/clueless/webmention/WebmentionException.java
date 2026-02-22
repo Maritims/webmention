@@ -1,11 +1,13 @@
 package no.clueless.webmention;
 
+import org.jetbrains.annotations.NotNull;
+
 public class WebmentionException extends Exception {
-    public WebmentionException(String message) {
+    public WebmentionException(@NotNull String message) {
         super(message);
     }
 
-    public WebmentionException(String message, Exception innerException) {
+    public WebmentionException(@NotNull String message, @NotNull Exception innerException) {
         super(message, innerException);
     }
 }

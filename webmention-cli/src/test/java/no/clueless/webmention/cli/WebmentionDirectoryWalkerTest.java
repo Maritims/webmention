@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashSet;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -35,7 +34,7 @@ class WebmentionDirectoryWalkerTest {
                 """);
 
         // act
-        var result = sut.walk(URI.create("https://example.com"), tempDir, null, new HashSet<>());
+        var result = sut.walk(URI.create("https://example.com"), tempDir, null);
 
         // assert
         assertEquals(Set.of(

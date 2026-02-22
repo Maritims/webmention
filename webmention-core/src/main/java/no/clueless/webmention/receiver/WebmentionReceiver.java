@@ -6,13 +6,14 @@ import no.clueless.webmention.WebmentionException;
 import no.clueless.webmention.event.WebmentionEvent;
 import no.clueless.webmention.http.SecureHttpClient;
 import no.clueless.webmention.http.WebmentionHttpRequestBuilder;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpResponse;
-import java.util.Objects;
 import java.util.concurrent.SubmissionPublisher;
 
 /**
@@ -20,17 +21,20 @@ import java.util.concurrent.SubmissionPublisher;
  */
 public class WebmentionReceiver {
     private static final Logger                               log = LoggerFactory.getLogger(WebmentionReceiver.class);
+    @NotNull
     private final        SecureHttpClient                     httpClient;
+    @NotNull
     private final        WebmentionRequestVerifier            webmentionRequestVerifier;
+    @NotNull
     private final        SubmissionPublisher<WebmentionEvent> onWebmentionReceived;
 
-    public WebmentionReceiver(SecureHttpClient httpClient, WebmentionRequestVerifier webmentionRequestVerifier, SubmissionPublisher<WebmentionEvent> onWebmentionReceived) {
-        this.httpClient                = Objects.requireNonNull(httpClient, "httpClient cannot be null");
-        this.webmentionRequestVerifier = Objects.requireNonNull(webmentionRequestVerifier, "requestVerifier cannot be null");
-        this.onWebmentionReceived      = Objects.requireNonNull(onWebmentionReceived, "onWebmentionReceived cannot be null");
+    public WebmentionReceiver(@NotNull SecureHttpClient httpClient, @NotNull WebmentionRequestVerifier webmentionRequestVerifier, @NotNull SubmissionPublisher<WebmentionEvent> onWebmentionReceived) {
+        this.httpClient                = httpClient;
+        this.webmentionRequestVerifier = webmentionRequestVerifier;
+        this.onWebmentionReceived      = onWebmentionReceived;
     }
 
-    public void receive(String sourceUrl, String targetUrl) throws WebmentionException {
+    public void receive(@NotNull String sourceUrl, @NotNull String targetUrl) throws WebmentionException {
         if (!webmentionRequestVerifier.verify(sourceUrl, targetUrl)) {
             throw new WebmentionException("Request from sourceUrl " + sourceUrl + " to targetUrl " + targetUrl + " did not pass verification");
         }
@@ -66,29 +70,44 @@ public class WebmentionReceiver {
     }
 
     public static class Builder {
+        @Nullable
         private SecureHttpClient                     secureHttpClient;
+        @Nullable
         private WebmentionRequestVerifier            requestVerifier;
+        @Nullable
         private SubmissionPublisher<WebmentionEvent> onWebmentionReceived;
 
         private Builder() {
         }
 
-        public Builder httpClient(SecureHttpClient httpClient) {
+        @NotNull
+        public Builder httpClient(@Nullable SecureHttpClient httpClient) {
             this.secureHttpClient = httpClient;
             return this;
         }
 
-        public Builder requestVerifier(WebmentionRequestVerifier requestVerifier) {
+        @NotNull
+        public Builder requestVerifier(@Nullable WebmentionRequestVerifier requestVerifier) {
             this.requestVerifier = requestVerifier;
             return this;
         }
 
-        public Builder onWebmentionReceived(SubmissionPublisher<WebmentionEvent> onWebmentionReceived) {
+        public Builder onWebmentionReceived(@Nullable SubmissionPublisher<WebmentionEvent> onWebmentionReceived) {
             this.onWebmentionReceived = onWebmentionReceived;
             return this;
         }
 
+        @NotNull
         public WebmentionReceiver build() {
+            if (secureHttpClient == null) {
+                throw new IllegalStateException("secureHttpClient cannot be null");
+            }
+            if (requestVerifier == null) {
+                throw new IllegalStateException("requestVerifier cannot be null");
+            }
+            if (onWebmentionReceived == null) {
+                throw new IllegalStateException("onWebmentionReceived cannot be null");
+            }
             return new WebmentionReceiver(secureHttpClient, requestVerifier, onWebmentionReceived);
         }
     }

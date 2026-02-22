@@ -1,6 +1,7 @@
 package no.clueless.webmention.persistence.sqlite;
 
 import no.clueless.webmention.persistence.Entity;
+import org.jetbrains.annotations.NotNull;
 
 @FunctionalInterface
 public interface UpdateExistingEntity<TEntity extends Entity<TId>, TId> {
@@ -11,5 +12,6 @@ public interface UpdateExistingEntity<TEntity extends Entity<TId>, TId> {
      * @param entityWithChanges The entity with the changes. Cannot exist in the database.
      * @return The updated entity.
      */
-    TEntity updateWithSomethingFromEntity(TEntity entityToUpdate, TEntity entityWithChanges);
+    @NotNull
+    TEntity updateWithSomethingFromEntity(@NotNull TEntity entityToUpdate, @NotNull TEntity entityWithChanges);
 }

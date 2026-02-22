@@ -1,5 +1,7 @@
 package no.clueless.webmention.persistence.sqlite;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -13,9 +15,10 @@ public class SqliteDatabasePathVerifier {
      * @param connectionString The connection string.
      * @return The path to the database file.
      */
-    public static Path extractAbsoluteDatabasePath(String connectionString) {
-        if (connectionString == null || connectionString.isBlank()) {
-            throw new IllegalArgumentException("connectionString cannot be null or empty");
+    @NotNull
+    public static Path extractAbsoluteDatabasePath(@NotNull String connectionString) {
+        if (connectionString.isBlank()) {
+            throw new IllegalArgumentException("connectionString cannot be blank");
         }
         if (!connectionString.startsWith("jdbc:sqlite:")) {
             throw new IllegalArgumentException("connectionString must start with jdbc:sqlite:, but was " + connectionString);
@@ -33,10 +36,7 @@ public class SqliteDatabasePathVerifier {
      * @return True if the database directory path exists and is writable.
      * @throws IllegalArgumentException If the database file path is null, does not end with .db or is a directory.
      */
-    public static boolean verifyDatabasePath(Path databaseFilePath) {
-        if (databaseFilePath == null) {
-            throw new IllegalArgumentException("databasePath cannot be null");
-        }
+    public static boolean verifyDatabasePath(@NotNull Path databaseFilePath) {
         if (!databaseFilePath.toString().endsWith(".db")) {
             throw new IllegalArgumentException("databasePath must end with .db, but was " + databaseFilePath);
         }

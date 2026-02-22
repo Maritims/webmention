@@ -4,7 +4,6 @@ import io.javalin.Javalin;
 import io.javalin.testtools.JavalinTest;
 import okhttp3.Headers;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -56,8 +55,7 @@ class OAuthManagementPluginTest {
         clientStore.registerClient("test-id", "test-secret", Set.of(Scope.WEBMENTIONS_MANAGE));
 
         var tokenValidator = mock(TokenValidator.class);
-        var oauthPrincipal = mock(OAuthPrincipal.class);
-        when(oauthPrincipal.scopes()).thenReturn(Set.of(Scope.CLIENTS_MANAGE));
+        var oauthPrincipal = new OAuthPrincipal("test-id", Set.of(Scope.CLIENTS_MANAGE), "client_credentials");
         when(tokenValidator.validate(administratorAccessToken)).thenReturn(oauthPrincipal);
 
         app = Javalin.create(config -> {

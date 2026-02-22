@@ -2,6 +2,7 @@ package no.clueless.webmention;
 
 import no.clueless.webmention.http.SecureHttpClient;
 import no.clueless.webmention.http.WebmentionHttpRequestBuilder;
+import org.jetbrains.annotations.NotNull;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
@@ -16,22 +17,24 @@ import java.util.regex.Pattern;
 
 public class WebmentionEndpointDiscoverer {
     private static final Logger           log = LoggerFactory.getLogger(WebmentionEndpointDiscoverer.class);
+    @NotNull
     private final        SecureHttpClient httpClient;
 
-    public WebmentionEndpointDiscoverer(SecureHttpClient httpClient) {
-        this.httpClient = Objects.requireNonNull(httpClient, "httpClient cannot be null");
+    public WebmentionEndpointDiscoverer(@NotNull SecureHttpClient httpClient) {
+        this.httpClient = httpClient;
     }
 
-    Document parseHtml(String html) {
-        if (html == null || html.isBlank()) {
-            throw new IllegalArgumentException("html cannot be null or blank");
+    @NotNull
+    Document parseHtml(@NotNull String html) {
+        if (html.isBlank()) {
+            throw new IllegalArgumentException("html cannot be blank");
         }
         return Jsoup.parse(html);
     }
 
-    protected Optional<String> findInHeaders(HttpHeaders httpHeaders) {
-        return Objects.requireNonNull(httpHeaders, "httpHeaders cannot be null")
-                .map()
+    @NotNull
+    protected Optional<String> findInHeaders(@NotNull HttpHeaders httpHeaders) {
+        return httpHeaders.map()
                 .entrySet()
                 .stream()
                 .filter(entry -> "link".equalsIgnoreCase(entry.getKey()))
@@ -56,9 +59,9 @@ public class WebmentionEndpointDiscoverer {
                 .map(header -> header.substring(header.indexOf("<") + 1, header.indexOf(">")));
     }
 
-    protected Optional<String> findInHtml(Document document) {
-        return Objects.requireNonNull(document, "document cannot be null")
-                .select("a[rel*=webmention], link[rel*=webmention]")
+    @NotNull
+    protected Optional<String> findInHtml(@NotNull Document document) {
+        return document.select("a[rel*=webmention], link[rel*=webmention]")
                 .stream()
                 .filter(link -> {
                     var rel    = link.attr("rel").toLowerCase();
@@ -69,10 +72,8 @@ public class WebmentionEndpointDiscoverer {
                 .findFirst();
     }
 
-    public Optional<String> discover(URI targetUri, HttpResponse<String> httpResponse) throws UnexpectedContentTypeException {
-        Objects.requireNonNull(targetUri, "targetUri cannot be null");
-        Objects.requireNonNull(httpResponse, "httpResponse cannot be null");
-
+    @NotNull
+    public Optional<String> discover(@NotNull URI targetUri, @NotNull HttpResponse<String> httpResponse) throws UnexpectedContentTypeException {
         var contentType = httpResponse.headers()
                 .firstValue("Content-Type")
                 .orElseGet(() -> httpResponse.headers()
@@ -124,9 +125,8 @@ public class WebmentionEndpointDiscoverer {
                 });
     }
 
-    public Optional<String> discover(URI targetUri) throws UnexpectedContentTypeException {
-        Objects.requireNonNull(targetUri, "targetUri cannot be null");
-
+    @NotNull
+    public Optional<String> discover(@NotNull URI targetUri) throws UnexpectedContentTypeException {
         var httpRequest = WebmentionHttpRequestBuilder.newBuilder()
                 .uri(targetUri)
                 .GET()

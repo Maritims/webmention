@@ -2,6 +2,7 @@ package no.clueless.webmention.cli.commands;
 
 import no.clueless.webmention.cli.Command;
 import no.clueless.webmention.cli.CommandResult;
+import org.jetbrains.annotations.NotNull;
 
 import static no.clueless.webmention.cli.ApplicationProperties.ARTIFACT_ID;
 
@@ -14,7 +15,7 @@ public class Help implements Command {
      */
     public Help() {}
 
-    public CommandResult execute(String[] args) {
+    public @NotNull CommandResult execute(@NotNull String[] args) {
         System.out.printf("""
                 Usage: %s [options]
                 
@@ -39,6 +40,6 @@ public class Help implements Command {
                     WEBMENTION_OAUTH_TOKEN_ENDPOINT     The OAuth token endpoint. Optional, but if not present, the user will be prompted for it.
                     WEBMENTION_API_ENDPOINT             The webmention API endpoint. Optional, but if not present, the user will be prompted for it.
                     %n""", ARTIFACT_ID);
-        return null;
+        return CommandResult.SUCCESS;
     }
 }

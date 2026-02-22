@@ -3,6 +3,7 @@ package no.clueless.webmention.persistence.sqlite;
 import no.clueless.oauth.ClientStore;
 import no.clueless.oauth.OAuthClient;
 import no.clueless.oauth.Scope;
+import org.jetbrains.annotations.NotNull;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.*;
@@ -14,12 +15,14 @@ import static no.clueless.webmention.persistence.sqlite.SqliteDatabasePathVerifi
 import static no.clueless.webmention.persistence.sqlite.SqliteDatabasePathVerifier.verifyDatabasePath;
 
 public class SqliteClientStore implements ClientStore {
+    @NotNull
     private final String connectionString;
+    @NotNull
     private final String createTableQuery;
 
-    public SqliteClientStore(String connectionString) {
-        if (connectionString == null || connectionString.isBlank()) {
-            throw new IllegalArgumentException("connectionString cannot be null or blank");
+    public SqliteClientStore(@NotNull String connectionString) {
+        if (connectionString.isBlank()) {
+            throw new IllegalArgumentException("connectionString cannot be blank");
         }
 
         this.connectionString = connectionString;
@@ -36,6 +39,7 @@ public class SqliteClientStore implements ClientStore {
                 """;
     }
 
+    @NotNull
     public final ClientStore initialize() {
         if (!verifyDatabasePath(extractAbsoluteDatabasePath(connectionString))) {
             throw new RuntimeException("Database path did not pass verification. The connection string must be of the form jdbc:sqlite:path/to/database.db, but was " + connectionString);
@@ -51,9 +55,9 @@ public class SqliteClientStore implements ClientStore {
     }
 
     @Override
-    public OAuthClient getClient(String clientId) {
-        if (clientId == null || clientId.isBlank()) {
-            throw new IllegalArgumentException("clientId cannot be null or blank");
+    public OAuthClient getClient(@NotNull String clientId) {
+        if (clientId.isBlank()) {
+            throw new IllegalArgumentException("clientId cannot be blank");
         }
 
         try (var connection = DriverManager.getConnection(connectionString)) {
@@ -75,9 +79,9 @@ public class SqliteClientStore implements ClientStore {
     }
 
     @Override
-    public void disableClient(String clientId) {
-        if (clientId == null || clientId.isBlank()) {
-            throw new IllegalArgumentException("clientId cannot be null or blank");
+    public void disableClient(@NotNull String clientId) {
+        if (clientId.isBlank()) {
+            throw new IllegalArgumentException("clientId cannot be blank");
         }
         try(var connection = DriverManager.getConnection(connectionString)) {
             var statement = connection.prepareStatement("UPDATE clients SET isEnabled = false WHERE clientId = ?");
@@ -92,9 +96,9 @@ public class SqliteClientStore implements ClientStore {
     }
 
     @Override
-    public void enableClient(String clientId) {
-        if (clientId == null || clientId.isBlank()) {
-            throw new IllegalArgumentException("clientId cannot be null or blank");
+    public void enableClient(@NotNull String clientId) {
+        if (clientId.isBlank()) {
+            throw new IllegalArgumentException("clientId cannot be blank");
         }
         try(var connection = DriverManager.getConnection(connectionString)) {
             var statement = connection.prepareStatement("UPDATE clients SET isEnabled = true WHERE clientId = ?");
@@ -109,9 +113,9 @@ public class SqliteClientStore implements ClientStore {
     }
 
     @Override
-    public void deleteClient(String clientId) {
-        if (clientId == null || clientId.isBlank()) {
-            throw new IllegalArgumentException("clientId cannot be null or blank");
+    public void deleteClient(@NotNull String clientId) {
+        if (clientId.isBlank()) {
+            throw new IllegalArgumentException("clientId cannot be blank");
         }
         try(var connection = DriverManager.getConnection(connectionString)) {
             var statement = connection.prepareStatement("DELETE FROM clients WHERE clientId = ?");
@@ -126,12 +130,12 @@ public class SqliteClientStore implements ClientStore {
     }
 
     @Override
-    public void registerClient(String clientId, String clientSecret, Set<Scope> scopes) {
-        if (clientId == null || clientId.isBlank()) {
-            throw new IllegalArgumentException("clientId cannot be null or blank");
+    public void registerClient(@NotNull String clientId, @NotNull String clientSecret, @NotNull Set<Scope> scopes) {
+        if (clientId.isBlank()) {
+            throw new IllegalArgumentException("clientId cannot be blank");
         }
-        if (clientSecret == null || clientSecret.isBlank()) {
-            throw new IllegalArgumentException("clientSecret cannot be null or blank");
+        if (clientSecret.isBlank()) {
+            throw new IllegalArgumentException("clientSecret cannot be blank");
         }
 
         try (var connection = DriverManager.getConnection(connectionString)) {
@@ -161,7 +165,7 @@ public class SqliteClientStore implements ClientStore {
     }
 
     @Override
-    public Set<OAuthClient> getClients(int page, int size, String orderByColumn, boolean ascending) {
+    public @NotNull Set<OAuthClient> getClients(int page, int size, @NotNull String orderByColumn, boolean ascending) {
         String direction = ascending ? "ASC" : "DESC";
         String query     = "SELECT * FROM clients ORDER BY " + orderByColumn + " " + direction + " LIMIT ? OFFSET ?";
 

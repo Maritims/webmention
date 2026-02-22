@@ -2,6 +2,7 @@ package no.clueless.webmention.receiver;
 
 import no.clueless.webmention.UnexpectedStatusCodeException;
 import no.clueless.webmention.WebmentionException;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,13 +14,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class WebmentionProcessor {
-    private record WebmentionTask(String sourceUrl, String targetUrl) {
+    private record WebmentionTask(@NotNull String sourceUrl, @NotNull String targetUrl) {
         public WebmentionTask {
-            if (sourceUrl == null || sourceUrl.isBlank()) {
-                throw new IllegalArgumentException("sourceUrl cannot be null or blank");
+            if (sourceUrl.isBlank()) {
+                throw new IllegalArgumentException("sourceUrl cannot be blank");
             }
-            if (targetUrl == null || targetUrl.isBlank()) {
-                throw new IllegalArgumentException("targetUrl cannot be null or blank");
+            if (targetUrl.isBlank()) {
+                throw new IllegalArgumentException("targetUrl cannot be blank");
             }
         }
     }
@@ -27,7 +28,9 @@ public class WebmentionProcessor {
     private static final Logger                                log       = LoggerFactory.getLogger(WebmentionProcessor.class);
     private static final ConcurrentLinkedQueue<WebmentionTask> queue     = new ConcurrentLinkedQueue<>();
     private final        ScheduledExecutorService              scheduler = Executors.newSingleThreadScheduledExecutor();
+    @NotNull
     private final        WebmentionRateLimiter                 webmentionRateLimiter;
+    @NotNull
     private final        WebmentionReceiver                    webmentionReceiver;
     private final        int                                   intervalInSeconds;
     private final        int                                   maxQueueSize;
@@ -37,7 +40,7 @@ public class WebmentionProcessor {
      */
     private final AtomicInteger currentQueueSize = new AtomicInteger(0);
 
-    public WebmentionProcessor(WebmentionRateLimiter webmentionRateLimiter, WebmentionReceiver webmentionReceiver, int intervalInSeconds, int maxQueueSize) {
+    public WebmentionProcessor(@NotNull WebmentionRateLimiter webmentionRateLimiter, @NotNull WebmentionReceiver webmentionReceiver, int intervalInSeconds, int maxQueueSize) {
         if (intervalInSeconds < 1) {
             throw new IllegalArgumentException("intervalInSeconds must be greater than zero");
         }
@@ -45,20 +48,13 @@ public class WebmentionProcessor {
             throw new IllegalArgumentException("maxQueueSize must be greater than zero");
         }
 
-        this.webmentionReceiver    = Objects.requireNonNull(webmentionReceiver, "webmentionReceiver cannot be null");
-        this.webmentionRateLimiter = Objects.requireNonNull(webmentionRateLimiter, "webmentionRateLimiter cannot be null");
+        this.webmentionReceiver    = webmentionReceiver;
+        this.webmentionRateLimiter = webmentionRateLimiter;
         this.intervalInSeconds     = intervalInSeconds;
         this.maxQueueSize          = maxQueueSize;
     }
 
-    /**
-     * Constructor with default values.
-     *
-     * @param webmentionRateLimiter the rate limiter
-     * @param webmentionReceiver    the receiver
-     * @see #WebmentionProcessor(WebmentionRateLimiter, WebmentionReceiver, int, int)
-     */
-    public WebmentionProcessor(WebmentionRateLimiter webmentionRateLimiter, WebmentionReceiver webmentionReceiver) {
+    public WebmentionProcessor(@NotNull WebmentionRateLimiter webmentionRateLimiter, @NotNull WebmentionReceiver webmentionReceiver) {
         this(webmentionRateLimiter, webmentionReceiver, 5, 5000);
     }
 
@@ -82,12 +78,12 @@ public class WebmentionProcessor {
         }
     }
 
-    public void queue(String sourceUrl, String targetUrl) {
-        if (sourceUrl == null || sourceUrl.isBlank()) {
-            throw new IllegalArgumentException("sourceUrl cannot be null or blank");
+    public void queue(@NotNull String sourceUrl, @NotNull String targetUrl) {
+        if (sourceUrl.isBlank()) {
+            throw new IllegalArgumentException("sourceUrl cannot be blank");
         }
-        if (targetUrl == null || targetUrl.isBlank()) {
-            throw new IllegalArgumentException("targetUrl cannot be null or blank");
+        if (targetUrl.isBlank()) {
+            throw new IllegalArgumentException("targetUrl cannot be blank");
         }
 
         if (!webmentionRateLimiter.isAllowed(sourceUrl)) {

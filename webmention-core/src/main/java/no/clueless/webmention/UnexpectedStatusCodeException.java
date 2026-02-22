@@ -1,18 +1,21 @@
 package no.clueless.webmention;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Objects;
 
 public class UnexpectedStatusCodeException extends RuntimeException {
+    @NotNull
     private final String url;
     private final int    statusCode;
 
-    public UnexpectedStatusCodeException(String url, int statusCode) {
+    public UnexpectedStatusCodeException(@NotNull String url, int statusCode) {
         super(String.format("URL %s returned unexpected status code %d", url, statusCode));
         this.url        = url;
         this.statusCode = statusCode;
     }
 
-    public String getUrl() {
+    public @NotNull String getUrl() {
         return url;
     }
 

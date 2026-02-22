@@ -4,6 +4,7 @@ import no.clueless.webmention.notifier.WebmentionNotification;
 import no.clueless.webmention.notifier.WebmentionNotifier;
 import no.clueless.webmention.persistence.Webmention;
 import no.clueless.webmention.persistence.WebmentionRepository;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,16 +13,12 @@ import java.util.concurrent.Flow;
 
 public class WebmentionReceivedSubscriber<TNotification extends WebmentionNotification> implements Flow.Subscriber<WebmentionEvent> {
     private static final Logger                            log = LoggerFactory.getLogger(WebmentionReceivedSubscriber.class);
+    @NotNull
     private final        WebmentionRepository              webmentionRepository;
+    @NotNull
     private final        WebmentionNotifier<TNotification> webmentionNotifier;
 
-    public WebmentionReceivedSubscriber(WebmentionRepository webmentionRepository, WebmentionNotifier<TNotification> webmentionNotifier) {
-        if(webmentionRepository == null) {
-            throw new IllegalArgumentException("webmentionRepository cannot be null");
-        }
-        if(webmentionNotifier == null) {
-            throw new IllegalArgumentException("webmentionNotifier cannot be null");
-        }
+    public WebmentionReceivedSubscriber(@NotNull WebmentionRepository webmentionRepository, @NotNull WebmentionNotifier<TNotification> webmentionNotifier) {
         this.webmentionRepository = webmentionRepository;
         this.webmentionNotifier   = webmentionNotifier;
     }
@@ -32,11 +29,11 @@ public class WebmentionReceivedSubscriber<TNotification extends WebmentionNotifi
     }
 
     @Override
-    public void onNext(WebmentionEvent item) {
+    public void onNext(@NotNull WebmentionEvent item) {
         var webmention = Webmention.newWebmention(item.sourceUrl(), item.targetUrl(), item.mentionText());
         webmentionRepository.upsert(
                 webmention,
-                entity -> webmentionRepository.getWebmentionBySourceUrl(item.sourceUrl()),
+                entity -> webmentionRepository.findWebmentionBySourceUrl(item.sourceUrl()).orElseThrow(() -> new IllegalArgumentException(String.format("No webmention found for sourceUrl %s", item.sourceUrl()))),
                 entity -> Webmention.newWebmention(item.sourceUrl(), item.targetUrl(), item.mentionText()),
                 (entityToUpdate, entityWithChanges) -> (Webmention) entityToUpdate.update(entityWithChanges)
         );

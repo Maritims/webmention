@@ -2,6 +2,8 @@ package no.clueless.webmention.cli;
 
 import no.clueless.webmention.event.WebmentionEvent;
 import no.clueless.webmention.receiver.WebmentionHtmlSourceScanner;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jsoup.nodes.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +26,9 @@ import java.util.stream.Stream;
 public class WebmentionDirectoryWalker {
     private static final Logger log = LoggerFactory.getLogger(WebmentionDirectoryWalker.class);
 
+    @NotNull
     private final WebmentionHtmlSourceScanner webmentionHtmlSourceScanner;
+    @NotNull
     private final Set<String>                 supportedFileExtensions;
 
     /**
@@ -43,19 +47,8 @@ public class WebmentionDirectoryWalker {
         }
     }
 
-    /**
-     * Creates a source URL for a given file.
-     *
-     * @param baseUri the base uri, e.g. <a href="https://clueless.no/">https://clueless.no</a>
-     * @param rootDir the root directory, e.g. /var/www/site/
-     * @param file    the file, e.g. /var/www/site/foo/bar.html
-     * @return the source URL, e.g. <a href="https://clueless.no/foo/bar.html">https://clueless.no/foo/bar.html</a>
-     */
-    String createSourceUrl(URI baseUri, Path rootDir, Path file) {
-        Objects.requireNonNull(baseUri, "baseUri cannot be null");
-        Objects.requireNonNull(rootDir, "rootDir cannot be null");
-        Objects.requireNonNull(file, "file cannot be null");
-
+    @NotNull
+    String createSourceUrl(@NotNull URI baseUri, @NotNull Path rootDir, @NotNull Path file) {
         // Relativise the file: /var/www/site/foo/bar.html -> foo/bar.html
         var relative = rootDir.relativize(file);
 
@@ -72,17 +65,14 @@ public class WebmentionDirectoryWalker {
     /**
      * Walks the given directory recursively and finds webmention links.
      *
-     * @param baseUri          The base URI, e.g. https://clueless.no/
+     * @param baseUri          The base URI, e.g. <a href="https://clueless.no/">https://clueless.no</a>
      * @param rootDir          The root directory to walk.
      * @param elementFilter    The element filter to use.
-     * @param webmentionEvents The webmention events to add found webmentions to.
      * @return The set of found webmentions.
      * @throws IOException If an I/O error occurs.
      */
-    public Set<WebmentionEvent> walk(URI baseUri, Path rootDir, Predicate<Element> elementFilter, Set<WebmentionEvent> webmentionEvents) throws IOException {
-        Objects.requireNonNull(rootDir, "rootDir cannot be null");
-        Objects.requireNonNull(webmentionEvents, "webmentionEvents cannot be null");
-
+    @NotNull
+    public Set<WebmentionEvent> walk(@NotNull URI baseUri, @NotNull Path rootDir, @Nullable Predicate<Element> elementFilter) throws IOException {
         if (!Files.exists(rootDir)) {
             throw new FileNotFoundException("Path does not exist: " + rootDir);
         }

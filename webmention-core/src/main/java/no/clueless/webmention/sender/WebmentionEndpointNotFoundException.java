@@ -1,16 +1,19 @@
 package no.clueless.webmention.sender;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Objects;
 
 public class WebmentionEndpointNotFoundException extends Exception {
+    @NotNull
     private final String url;
 
-    public WebmentionEndpointNotFoundException(String url) {
+    public WebmentionEndpointNotFoundException(@NotNull String url) {
         super(String.format("No webmention endpoint was referenced in the response from URL %s", url));
         this.url = url;
     }
 
-    public String getUrl() {
+    public @NotNull String getUrl() {
         return url;
     }
 

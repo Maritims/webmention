@@ -1,5 +1,6 @@
 package no.clueless.webmention.receiver;
 
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -8,9 +9,10 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class WebmentionRateLimiter {
-    private static final Logger log = LoggerFactory.getLogger(WebmentionRateLimiter.class);
-    private final long cooldownMillis;
-    private final Map<String, Long> lruCache;
+    private static final Logger            log = LoggerFactory.getLogger(WebmentionRateLimiter.class);
+    private final        long              cooldownMillis;
+    @NotNull
+    private final        Map<String, Long> lruCache;
 
     public WebmentionRateLimiter(int maxEntries, long cooldownSeconds) {
         this.cooldownMillis = cooldownSeconds * 1000;
@@ -22,7 +24,7 @@ public class WebmentionRateLimiter {
         });
     }
 
-    public boolean isAllowed(String source) {
+    public boolean isAllowed(@NotNull String source) {
         var now      = System.currentTimeMillis();
         var lastSeen = lruCache.get(source);
 

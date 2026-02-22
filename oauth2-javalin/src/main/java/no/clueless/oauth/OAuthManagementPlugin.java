@@ -7,24 +7,12 @@ import org.jetbrains.annotations.NotNull;
 
 import static io.javalin.apibuilder.ApiBuilder.*;
 
-/**
- * A Javalin plugin acting as an OAuth 2.0 Management API.
- */
 public class OAuthManagementPlugin extends Plugin<Void> {
+    @NotNull
     private final ClientStore clientStore;
     private final boolean     isEnabled;
 
-    /**
-     * Constructor.
-     *
-     * @param clientStore the client store
-     * @param isEnabled   whether the plugin should be enabled or not
-     * @throws IllegalArgumentException if clientStore is null
-     */
-    public OAuthManagementPlugin(ClientStore clientStore, boolean isEnabled) {
-        if (clientStore == null) {
-            throw new IllegalArgumentException("clientStore cannot be null");
-        }
+    public OAuthManagementPlugin(@NotNull ClientStore clientStore, boolean isEnabled) {
         this.clientStore = clientStore;
         this.isEnabled   = isEnabled;
     }

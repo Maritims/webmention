@@ -5,36 +5,19 @@ import io.javalin.http.ForbiddenResponse;
 import io.javalin.http.UnauthorizedResponse;
 import io.javalin.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.Optional;
-
-/**
- * A Javalin plugin acting as an OAuth 2.0 Resource Server.
- */
 public class OAuthResourceServerPlugin extends Plugin<Void> {
+    @NotNull
     private final TokenValidator tokenValidator;
+    @NotNull
     private final String         principalKey;
 
-    /**
-     * Constructor.
-     *
-     * @param tokenValidator the token validator
-     * @param principalKey   the principal key. Defaults to "auth_principal"
-     * @throws IllegalArgumentException if tokenValidator or scopeExtractor is null
-     */
-    public OAuthResourceServerPlugin(TokenValidator tokenValidator, String principalKey) {
-        if (tokenValidator == null) {
-            throw new IllegalArgumentException("tokenValidator cannot be null");
-        }
+    public OAuthResourceServerPlugin(@NotNull TokenValidator tokenValidator, @Nullable String principalKey) {
         this.tokenValidator = tokenValidator;
         this.principalKey   = principalKey == null || principalKey.isBlank() ? "auth_principal" : principalKey;
     }
 
-    /**
-     * Constructor with default values.
-     *
-     * @param tokenValidator the token validator
-     */
     public OAuthResourceServerPlugin(TokenValidator tokenValidator) {
         this(tokenValidator, "auth_principal");
     }
@@ -55,7 +38,7 @@ public class OAuthResourceServerPlugin extends Plugin<Void> {
             }
 
             var token     = authorizationHeader.substring(7);
-            var principal = Optional.ofNullable(tokenValidator.validate(token)).orElseThrow(() -> new UnauthorizedResponse("Invalid token"));
+            var principal = tokenValidator.validate(token);
             var hasAccess = principal.scopes().stream().anyMatch(routeRoles::contains);
             if (!hasAccess) {
                 throw new ForbiddenResponse("You do not have access to this resource");

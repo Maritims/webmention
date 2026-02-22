@@ -1,39 +1,20 @@
 package no.clueless.webmention.persistence;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.time.LocalDateTime;
 
-/**
- * Represents an entity in the database.
- *
- * @param <TId> The type of the entity's id.
- */
 public interface Entity<TId> {
-    /**
-     * The entity's unique identifier.
-     *
-     * @return The entity's unique identifier.
-     */
+    @Nullable
     TId id();
 
-    /**
-     * When the entity was created.
-     *
-     * @return When the entity was created.
-     */
+    @Nullable
     LocalDateTime created();
 
-    /**
-     * When the entity was last updated.
-     *
-     * @return When the entity was last updated.
-     */
+    @Nullable
     LocalDateTime updated();
 
-    /**
-     * Updates the entity based on the given entity.
-     *
-     * @param entity The entity to update the current entity with.
-     * @return The updated entity.
-     */
-    Entity<TId> update(Entity<TId> entity);
+    @NotNull
+    Entity<TId> update(@NotNull Entity<TId> entity);
 }

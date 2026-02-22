@@ -1,5 +1,7 @@
 package no.clueless.webmention.persistence;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.time.LocalDateTime;
 
 public record Webmention(Integer id, boolean isApproved, String sourceUrl, String targetUrl, String mentionText,
@@ -18,7 +20,7 @@ public record Webmention(Integer id, boolean isApproved, String sourceUrl, Strin
     }
 
     @Override
-    public Entity<Integer> update(Entity<Integer> entity) {
+    public @NotNull Entity<Integer> update(@NotNull Entity<Integer> entity) {
         var webmention = (Webmention) entity;
         return update(webmention.isApproved, webmention.mentionText, webmention.updated);
     }

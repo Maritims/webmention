@@ -2,11 +2,14 @@ package no.clueless.webmention.persistence.sqlite;
 
 import no.clueless.webmention.persistence.Webmention;
 import no.clueless.webmention.persistence.WebmentionRepository;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.sql.*;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class SqliteWebmentionRepository extends SqliteBaseRepository<Webmention> implements WebmentionRepository {
     public SqliteWebmentionRepository(String connectionString) {
@@ -24,7 +27,7 @@ public class SqliteWebmentionRepository extends SqliteBaseRepository<Webmention>
     }
 
     @Override
-    protected Webmention mapFromResultSet(ResultSet resultSet) throws SQLException {
+    protected @NotNull Webmention mapFromResultSet(@NotNull ResultSet resultSet) throws SQLException {
         var id          = resultSet.getInt("id");
         var isApproved  = resultSet.getBoolean("isApproved");
         var sourceUrl   = resultSet.getString("sourceUrl");
@@ -36,26 +39,19 @@ public class SqliteWebmentionRepository extends SqliteBaseRepository<Webmention>
     }
 
     @Override
-    protected PreparedStatement prepareCountStatement(Connection connection) throws SQLException {
+    protected @NotNull PreparedStatement prepareCountStatement(@NotNull Connection connection) throws SQLException {
         return connection.prepareStatement("SELECT COUNT(*) FROM webmentions");
     }
 
     @Override
-    protected PreparedStatement prepareFindByIdStatement(Connection connection, Integer id) throws SQLException {
+    protected @NotNull PreparedStatement prepareFindByIdStatement(@NotNull Connection connection, @NotNull Integer id) throws SQLException {
         var preparedStatement = connection.prepareStatement("SELECT id, isApproved, sourceUrl, targetUrl, mentionText, created, updated FROM webmentions WHERE id = ?");
         preparedStatement.setInt(1, id);
         return preparedStatement;
     }
 
     @Override
-    protected PreparedStatement prepareCreateStatement(Connection connection, Webmention webmention) throws SQLException {
-        if (connection == null) {
-            throw new IllegalArgumentException("connection cannot be null");
-        }
-        if (webmention == null) {
-            throw new IllegalArgumentException("webmention cannot be null");
-        }
-
+    protected @NotNull PreparedStatement prepareCreateStatement(@NotNull Connection connection, @NotNull Webmention webmention) throws SQLException {
         var preparedStatement = connection.prepareStatement("INSERT INTO webmentions(isApproved, sourceUrl, targetUrl, mentionText) VALUES(?, ?, ?, ?)");
         preparedStatement.setBoolean(1, webmention.isApproved());
         preparedStatement.setString(2, webmention.sourceUrl());
@@ -65,14 +61,7 @@ public class SqliteWebmentionRepository extends SqliteBaseRepository<Webmention>
     }
 
     @Override
-    protected PreparedStatement prepareUpdateStatement(Connection connection, Webmention webmention) throws SQLException {
-        if (connection == null) {
-            throw new IllegalArgumentException("connection cannot be null");
-        }
-        if (webmention == null) {
-            throw new IllegalArgumentException("webmention cannot be null");
-        }
-
+    protected @NotNull PreparedStatement prepareUpdateStatement(@NotNull Connection connection, @NotNull Webmention webmention) throws SQLException {
         var preparedStatement = connection.prepareStatement("UPDATE webmentions SET isApproved = ?, mentionText = ?, updated = ? WHERE id = ?");
         preparedStatement.setBoolean(1, webmention.isApproved());
         preparedStatement.setString(2, webmention.mentionText());
@@ -82,33 +71,33 @@ public class SqliteWebmentionRepository extends SqliteBaseRepository<Webmention>
     }
 
     @Override
-    public Webmention getWebmentionBySourceUrl(String sourceUrl) {
+    public @NotNull Optional<Webmention> findWebmentionBySourceUrl(@NotNull String sourceUrl) {
         try (var connection = DriverManager.getConnection(connectionString)) {
             var sql       = "SELECT id, isApproved, sourceUrl, targetURl, mentionText, created, updated FROM webmentions WHERE sourceUrl = ?";
             var statement = connection.prepareStatement(sql);
             statement.setString(1, sourceUrl);
             var resultSet = statement.executeQuery();
-            return resultSet.next() ? mapFromResultSet(resultSet) : null;
+            return resultSet.next() ? Optional.of(mapFromResultSet(resultSet)) : Optional.empty();
         } catch (SQLException e) {
             throw new RuntimeException("Failed to connect to database", e);
         }
     }
 
     @Override
-    public List<Webmention> getWebmentionsByIsApproved(int pageNumber, int pageSize, String orderByColumn, String orderDirection, Boolean isApproved) {
+    public @NotNull List<Webmention> getWebmentionsByIsApproved(int pageNumber, int pageSize, @NotNull String orderByColumn, @NotNull String orderDirection, @Nullable Boolean isApproved) {
         if (pageSize < 1) {
             throw new IllegalArgumentException("pageSize must be greater than 0");
         }
         if (pageNumber < 0) {
             throw new IllegalArgumentException("pageNumber must be greater than or equal to 0");
         }
-        if (orderByColumn == null || orderByColumn.isBlank()) {
-            throw new IllegalArgumentException("orderByColumn cannot be null or blank");
+        if (orderByColumn.isBlank()) {
+            throw new IllegalArgumentException("orderByColumn cannot be blank");
         }
         if (!orderByColumn.equalsIgnoreCase("id") && !orderByColumn.equalsIgnoreCase("name") && !orderByColumn.equalsIgnoreCase("message") && !orderByColumn.equalsIgnoreCase("timestamp")) {
             throw new IllegalArgumentException("orderByColumn must be either id, name, message or timestamp");
         }
-        if (orderDirection == null || !orderDirection.equalsIgnoreCase("asc") && !orderDirection.equalsIgnoreCase("desc")) {
+        if (!orderDirection.equalsIgnoreCase("asc") && !orderDirection.equalsIgnoreCase("desc")) {
             throw new IllegalArgumentException("orderDirection must be either asc or desc");
         }
 
@@ -141,11 +130,7 @@ public class SqliteWebmentionRepository extends SqliteBaseRepository<Webmention>
     }
 
     @Override
-    public void updateApproval(Webmention webmention, boolean isApproved) {
-        if (webmention == null) {
-            throw new IllegalArgumentException("webmention cannot be null");
-        }
-
+    public void updateApproval(@NotNull Webmention webmention, boolean isApproved) {
         try (var connection = DriverManager.getConnection(connectionString)) {
             var statement = connection.prepareStatement("UPDATE webmentions SET isApproved = ? WHERE id = ?");
             statement.setBoolean(1, isApproved);

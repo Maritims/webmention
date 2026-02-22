@@ -1,13 +1,19 @@
 package no.clueless.webmention.persistence;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.List;
+import java.util.Optional;
 
 public interface WebmentionRepository extends Repository<Webmention, Integer> {
-    Webmention getWebmentionBySourceUrl(String sourceUrl);
+    @NotNull
+    Optional<Webmention> findWebmentionBySourceUrl(@NotNull String sourceUrl);
 
-    void updateApproval(Webmention webmention, boolean isApproved);
+    void updateApproval(@NotNull Webmention webmention, boolean isApproved);
 
     void deleteWebmention(int id);
 
-    List<Webmention> getWebmentionsByIsApproved(int pageNumber, int pageSize, String orderByColumn, String orderDirection, Boolean isApproved);
+    @NotNull
+    List<Webmention> getWebmentionsByIsApproved(int pageNumber, int pageSize, @NotNull String orderByColumn, @NotNull String orderDirection, @Nullable Boolean isApproved);
 }

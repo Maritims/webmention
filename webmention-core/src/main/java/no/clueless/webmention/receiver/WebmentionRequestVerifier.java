@@ -1,39 +1,34 @@
 package no.clueless.webmention.receiver;
 
 import no.clueless.webmention.WebmentionException;
+import org.jetbrains.annotations.NotNull;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Objects;
 import java.util.Set;
 
 public class WebmentionRequestVerifier {
     private static final Set<String>              SUPPORTED_SCHEMES = Set.of("http", "https");
+    @NotNull
     private final        WebmentionTargetVerifier webmentionTargetVerifier;
 
-    public WebmentionRequestVerifier(WebmentionTargetVerifier webmentionTargetVerifier) {
-        this.webmentionTargetVerifier = Objects.requireNonNull(webmentionTargetVerifier, "targetVerifier cannot be null");
+    public WebmentionRequestVerifier(@NotNull WebmentionTargetVerifier webmentionTargetVerifier) {
+        this.webmentionTargetVerifier = webmentionTargetVerifier;
     }
 
-    private void validateScheme(URI uri) throws WebmentionException {
+    private void validateScheme(@NotNull URI uri) throws WebmentionException {
         var scheme = uri.getScheme();
         if (scheme == null || !SUPPORTED_SCHEMES.contains(scheme.toLowerCase())) {
             throw new WebmentionException("The scheme of URI " + uri + " is not supported");
         }
     }
 
-    private URI stripFragment(URI uri) throws URISyntaxException {
+    @NotNull
+    private URI stripFragment(@NotNull URI uri) throws URISyntaxException {
         return uri.getFragment() == null ? uri : new URI(uri.getScheme(), uri.getAuthority(), uri.getPath(), uri.getQuery(), null);
     }
 
-    public boolean verify(String source, String target) throws WebmentionException {
-        if (source == null) {
-            throw new WebmentionException("Source URL cannot be null");
-        }
-        if (target == null) {
-            throw new WebmentionException("Target URL cannot be null");
-        }
-
+    public boolean verify(@NotNull String source, @NotNull String target) throws WebmentionException {
         try {
             var sourceUri = new URI(source);
             var targetUri = new URI(target);

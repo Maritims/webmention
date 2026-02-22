@@ -12,6 +12,7 @@
         <module>webmention-service</module>
         <module>webmention-cli</module>
         <module>oauth2-javalin</module>
+        <module>webmention-api-client</module>
     </modules>
 
     <name>Webmention Parent</name>
@@ -58,6 +59,7 @@
         <jbcrypt.version>0.4</jbcrypt.version>
         <native.maven.plugin.version>0.11.4</native.maven.plugin.version>
         <jreleaser.skip>true</jreleaser.skip>
+        <annotations.version>24.1.0</annotations.version>
     </properties>
 
     <dependencyManagement>
@@ -66,12 +68,6 @@
                 <groupId>io.javalin</groupId>
                 <artifactId>javalin</artifactId>
                 <version>${javalin.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.javalin</groupId>
-                <artifactId>javalin-testtools</artifactId>
-                <version>${javalin.version}</version>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.xerial</groupId>
@@ -109,12 +105,6 @@
                 <version>${slf4j.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-simple</artifactId>
-                <version>${slf4j.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
                 <groupId>ch.qos.logback</groupId>
                 <artifactId>logback-classic</artifactId>
                 <version>${logback.version}</version>
@@ -130,6 +120,11 @@
                 <version>${jbcrypt.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.jetbrains</groupId>
+                <artifactId>annotations</artifactId>
+                <version>${annotations.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.junit.jupiter</groupId>
                 <artifactId>junit-jupiter-params</artifactId>
                 <version>${junit.version}</version>
@@ -139,6 +134,18 @@
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-core</artifactId>
                 <version>${mockito.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.javalin</groupId>
+                <artifactId>javalin-testtools</artifactId>
+                <version>${javalin.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-simple</artifactId>
+                <version>${slf4j.version}</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>

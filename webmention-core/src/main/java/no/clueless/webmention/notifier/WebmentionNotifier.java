@@ -1,7 +1,11 @@
 package no.clueless.webmention.notifier;
 
-public interface WebmentionNotifier<TNotification extends WebmentionNotification> {
-    TNotification newNotification(String sourceUrl, String targetUrl, String mentionText);
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-    void notify(TNotification notification);
+public interface WebmentionNotifier<TNotification extends WebmentionNotification> {
+    @NotNull
+    TNotification newNotification(@NotNull String sourceUrl, @NotNull String targetUrl, @Nullable String mentionText);
+
+    void notify(@NotNull TNotification notification);
 }

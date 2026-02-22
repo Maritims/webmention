@@ -3,6 +3,8 @@ package no.clueless.webmention.notifier.email;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import no.clueless.webmention.notifier.WebmentionNotifier;
 import org.apache.commons.text.StringEscapeUtils;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,12 +28,12 @@ public class WebmentionEmailViaResendNotifier implements WebmentionNotifier<Webm
     }
 
     @Override
-    public WebmentionEmailNotification newNotification(String sourceUrl, String targetUrl, String mentionText) {
-        if (sourceUrl == null || sourceUrl.isBlank()) {
-            throw new IllegalArgumentException("sourceUrl cannot be null or blank");
+    public @NotNull WebmentionEmailNotification newNotification(@NotNull String sourceUrl, @NotNull String targetUrl, @Nullable String mentionText) {
+        if (sourceUrl.isBlank()) {
+            throw new IllegalArgumentException("sourceUrl cannot be blank");
         }
-        if (targetUrl == null || targetUrl.isBlank()) {
-            throw new IllegalArgumentException("targetUrl cannot be null or blank");
+        if (targetUrl.isBlank()) {
+            throw new IllegalArgumentException("targetUrl cannot be blank");
         }
 
         var body = String.format("""
@@ -49,7 +51,7 @@ public class WebmentionEmailViaResendNotifier implements WebmentionNotifier<Webm
     }
 
     @Override
-    public void notify(WebmentionEmailNotification notification) {
+    public void notify(@NotNull WebmentionEmailNotification notification) {
         try (var httpClient = HttpClient.newHttpClient()) {
             var httpRequest = HttpRequest.newBuilder()
                     .uri(URI.create("https://api.resend.com/emails"))

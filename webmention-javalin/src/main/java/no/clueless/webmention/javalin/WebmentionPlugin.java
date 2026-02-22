@@ -10,6 +10,7 @@ import no.clueless.oauth.*;
 import no.clueless.webmention.persistence.WebmentionRepository;
 import no.clueless.webmention.receiver.WebmentionProcessor;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,29 +26,17 @@ import static io.javalin.apibuilder.ApiBuilder.*;
 public class WebmentionPlugin extends Plugin<Void> {
     private static final Logger log = LoggerFactory.getLogger(WebmentionPlugin.class);
 
+    @NotNull
     private final String               endpoint;
+    @NotNull
     private final WebmentionProcessor  webmentionProcessor;
+    @NotNull
     private final WebmentionRepository webmentionRepository;
     private final boolean              testMode;
+    @Nullable
     private final Set<String>          testPages;
 
-    /**
-     * Constructor for test mode.
-     *
-     * @param endpoint             the webmention endpoint.
-     * @param webmentionProcessor  the webmention processor.
-     * @param webmentionRepository the webmention repository.
-     * @param testMode             whether to run in test mode.
-     * @param testPages            the test pages to use.
-     * @throws IllegalArgumentException if webmentionProcessor or webmentionRepository is null.
-     */
-    public WebmentionPlugin(String endpoint, WebmentionProcessor webmentionProcessor, WebmentionRepository webmentionRepository, boolean testMode, Set<String> testPages) {
-        if (webmentionProcessor == null) {
-            throw new IllegalArgumentException("webmentionProcessor cannot be null");
-        }
-        if (webmentionRepository == null) {
-            throw new IllegalArgumentException("webmentionRepository cannot be null");
-        }
+    public WebmentionPlugin(@Nullable String endpoint, @NotNull WebmentionProcessor webmentionProcessor, @NotNull WebmentionRepository webmentionRepository, boolean testMode, @Nullable Set<String> testPages) {
         this.endpoint             = endpoint == null || endpoint.isBlank() ? "/webmention" : endpoint;
         this.webmentionProcessor  = webmentionProcessor;
         this.webmentionRepository = webmentionRepository;
@@ -55,26 +44,11 @@ public class WebmentionPlugin extends Plugin<Void> {
         this.testPages            = testPages;
     }
 
-    /**
-     * Constructor for production mode.
-     *
-     * @param endpoint             the webmention endpoint.
-     * @param webmentionProcessor  the webmention processor.
-     * @param webmentionRepository the webmention repository.
-     * @see #WebmentionPlugin(String, WebmentionProcessor, WebmentionRepository, boolean, Set)
-     */
-    public WebmentionPlugin(String endpoint, WebmentionProcessor webmentionProcessor, WebmentionRepository webmentionRepository) {
+    public WebmentionPlugin(@NotNull String endpoint, @NotNull WebmentionProcessor webmentionProcessor, @NotNull WebmentionRepository webmentionRepository) {
         this(endpoint, webmentionProcessor, webmentionRepository, false, null);
     }
 
-    /**
-     * Constructor for production mode with default values.
-     *
-     * @param webmentionProcessor  the webmention processor.
-     * @param webmentionRepository the webmention repository.
-     * @see #WebmentionPlugin(String, WebmentionProcessor, WebmentionRepository, boolean, Set)
-     */
-    public WebmentionPlugin(WebmentionProcessor webmentionProcessor, WebmentionRepository webmentionRepository) {
+    public WebmentionPlugin(@NotNull WebmentionProcessor webmentionProcessor, @NotNull WebmentionRepository webmentionRepository) {
         this("/webmention", webmentionProcessor, webmentionRepository);
     }
 
@@ -130,7 +104,7 @@ public class WebmentionPlugin extends Plugin<Void> {
 
                     patch("publish/{webmentionId}", ctx -> {
                         var webmentionId = ctx.pathParamAsClass("webmentionId", Integer.class).getOrThrow(id -> new BadRequestResponse("webmentionId must be a valid integer"));
-                        var webmention   = webmentionRepository.getById(webmentionId).orElseThrow(() -> new NotFoundResponse("Webmention not found"));
+                        var webmention   = webmentionRepository.findById(webmentionId).orElseThrow(() -> new NotFoundResponse("Webmention not found"));
 
                         if (webmention.isApproved()) {
                             throw new ConflictResponse("Webmention is already approved");
@@ -142,7 +116,7 @@ public class WebmentionPlugin extends Plugin<Void> {
 
                     patch("unpublish/{webmentionId}", ctx -> {
                         var webmentionId = ctx.pathParamAsClass("webmentionId", Integer.class).getOrThrow(id -> new BadRequestResponse("webmentionId must be a valid integer"));
-                        var webmention   = webmentionRepository.getById(webmentionId).orElseThrow(() -> new NotFoundResponse("Webmention not found"));
+                        var webmention   = webmentionRepository.findById(webmentionId).orElseThrow(() -> new NotFoundResponse("Webmention not found"));
 
                         if (!webmention.isApproved()) {
                             throw new ConflictResponse("Webmention is already unapproved");

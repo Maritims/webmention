@@ -1,6 +1,7 @@
 package no.clueless.webmention.cli;
 
 import no.clueless.webmention.cli.commands.*;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -8,31 +9,22 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
-/**
- * Command processor.
- */
 public class CommandProcessor {
     private static final Logger log = LoggerFactory.getLogger(CommandProcessor.class);
+    @NotNull
     private final Map<String, Supplier<Command>> commands = new HashMap<>();
 
-    /**
-     * Constructor. Maps commands.
-     */
     public CommandProcessor() {
         commands.put("find-and-send-webmentions", FindAndSendWebmentions::new);
-        commands.put("get-webmentions", GetWebmentions::new);
-        commands.put("update-webmention-approval", UpdateWebmentionApproval::new),
-        commands.put("delete-webmention", DeleteWebmention::new),
+        commands.put("get-webmentions", WebmentionManagementCommand::new);
+        commands.put("publish-webmention", WebmentionManagementCommand::new);
+        commands.put("unpublish-webmention", WebmentionManagementCommand::new);
+        commands.put("delete-webmention", WebmentionManagementCommand::new);
         commands.put("version", Version::new);
         commands.put("help", Help::new);
     }
 
-    /**
-     * Processes the given arguments.
-     *
-     * @param args the arguments
-     */
-    public void process(String[] args) {
+    public void process(@NotNull String[] args) {
         if (args.length == 0) {
             commands.get("help").get().execute(args);
             return;

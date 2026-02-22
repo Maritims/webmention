@@ -1,15 +1,9 @@
 package no.clueless.webmention.cli;
 
-/**
- * A command that can be executed.
- */
+import org.jetbrains.annotations.NotNull;
+
 @FunctionalInterface
 public interface Command {
-    /**
-     * Executes the command.
-     *
-     * @param args the command arguments
-     * @return the command result
-     */
-    CommandResult execute(String[] args);
+    @NotNull
+    CommandResult execute(@NotNull String[] args);
 }

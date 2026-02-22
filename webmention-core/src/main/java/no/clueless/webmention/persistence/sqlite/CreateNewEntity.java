@@ -1,6 +1,7 @@
 package no.clueless.webmention.persistence.sqlite;
 
 import no.clueless.webmention.persistence.Entity;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Creates a new entity based on an existing entity.
@@ -16,5 +17,6 @@ public interface CreateNewEntity<TEntity extends Entity<TId>, TId> {
      * @param entity The entity to base the new entity on. Must not exist in the database.
      * @return The new entity.
      */
-    TEntity createNewWithSomethingFromEntity(TEntity entity);
+    @NotNull
+    TEntity createNewWithSomethingFromEntity(@NotNull TEntity entity);
 }

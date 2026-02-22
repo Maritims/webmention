@@ -1,5 +1,7 @@
 package no.clueless.webmention.receiver;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 import org.slf4j.Logger;
@@ -25,7 +27,7 @@ public class WebmentionHtmlSourceScanner implements WebmentionSourceScanner {
     }
 
     @Override
-    public Optional<String> findTargetUrlMention(String body, String targetUrl) {
+    public @NotNull Optional<String> findTargetUrlMention(@NotNull String body, @NotNull String targetUrl) {
         var document = Jsoup.parse(body);
         var elements = document.select("a[href=\"" + targetUrl + "\"], img[href=\"" + targetUrl + "\"], video[src=\"" + targetUrl + "\"]");
         return elements.stream()
@@ -40,7 +42,8 @@ public class WebmentionHtmlSourceScanner implements WebmentionSourceScanner {
      * @param elementFilter The elementFilter to filter mentions by.
      * @return A map of all mentions found in the body by URI.
      */
-    public Map<URI, String> findAllMentions(String body, Predicate<Element> elementFilter) {
+    @NotNull
+    public Map<URI, String> findAllMentions(@NotNull String body, @Nullable Predicate<Element> elementFilter) {
         var document = Jsoup.parse(body);
         var elements = document.select("a[href], img[href], video[src]");
         return elements.stream()

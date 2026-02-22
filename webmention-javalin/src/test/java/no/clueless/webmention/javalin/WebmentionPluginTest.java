@@ -49,13 +49,12 @@ class WebmentionPluginTest {
     @BeforeEach
     void setUp() {
         var tokenValidator         = mock(TokenValidator.class);
-        var administratorPrincipal = mock(OAuthPrincipal.class);
-        when(administratorPrincipal.scopes()).thenReturn(Set.of(Scope.WEBMENTIONS_MANAGE));
+        var administratorPrincipal = new OAuthPrincipal("administrator", Set.of(Scope.WEBMENTIONS_MANAGE), "client_credentials");
         when(tokenValidator.validate(administratorBearerToken)).thenReturn(administratorPrincipal);
 
         var webmentionRepository = mock(WebmentionRepository.class);
         var webmention           = mock(Webmention.class);
-        when(webmentionRepository.getById(1)).thenReturn(Optional.of(webmention));
+        when(webmentionRepository.findById(1)).thenReturn(Optional.of(webmention));
 
         app = Javalin.create(config -> {
             config.registerPlugin(new OAuthResourceServerPlugin(tokenValidator));

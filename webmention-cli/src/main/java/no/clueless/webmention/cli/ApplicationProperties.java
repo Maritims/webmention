@@ -1,24 +1,18 @@
 package no.clueless.webmention.cli;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Properties;
 
-/**
- * Application properties.
- */
 public class ApplicationProperties {
-    /**
-     * The application artifact ID.
-     */
-    public static final String  ARTIFACT_ID;
-    /**
-     * The application version.
-     */
-    public static final String  VERSION;
-    /**
-     * The application build time.
-     */
+    @NotNull
+    public static final String ARTIFACT_ID;
+    @NotNull
+    public static final String VERSION;
+    @Nullable
     public static       Instant BUILD_TIME;
 
     static {

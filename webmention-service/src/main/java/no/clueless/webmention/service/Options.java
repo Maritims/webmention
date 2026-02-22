@@ -1,5 +1,7 @@
 package no.clueless.webmention.service;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Optional;
@@ -22,16 +24,16 @@ import java.util.Set;
  */
 public record Options(
         int httpServerPort,
-        String databaseConnectionString,
-        String webmentionEndpoint,
-        Set<String> supportedDomains,
+        @NotNull String databaseConnectionString,
+        @NotNull String webmentionEndpoint,
+        @NotNull Set<String> supportedDomains,
         long connectTimeout,
-        String oauthIssuer,
-        String oauthJwtSecret,
+        @NotNull String oauthIssuer,
+        @NotNull String oauthJwtSecret,
         long oauthAccessTokenValiditySeconds,
         boolean isOauthManagementApiEnabled,
         boolean testMode,
-        Set<String> testPages
+        @NotNull Set<String> testPages
 ) {
     /**
      * Constructor.
@@ -53,20 +55,20 @@ public record Options(
         if (httpServerPort < 1024 || httpServerPort > 65535) {
             throw new IllegalArgumentException("httpServerPort must be between 1024 and 65535");
         }
-        if (databaseConnectionString == null || databaseConnectionString.isBlank()) {
-            throw new IllegalArgumentException("databaseConnectionString cannot be null or blank");
+        if (databaseConnectionString.isBlank()) {
+            throw new IllegalArgumentException("databaseConnectionString cannot be blank");
         }
-        if (webmentionEndpoint == null || webmentionEndpoint.isBlank()) {
-            throw new IllegalArgumentException("webmentionEndpoint cannot be null or blank");
+        if (webmentionEndpoint.isBlank()) {
+            throw new IllegalArgumentException("webmentionEndpoint cannot be blank");
         }
-        if (supportedDomains == null || supportedDomains.isEmpty()) {
-            throw new IllegalArgumentException("supportedDomains cannot be null or empty");
+        if (supportedDomains.isEmpty()) {
+            throw new IllegalArgumentException("supportedDomains cannot be empty");
         }
-        if (oauthIssuer == null || oauthIssuer.isBlank()) {
-            throw new IllegalArgumentException("oauthIssuer cannot be null or blank");
+        if (oauthIssuer.isBlank()) {
+            throw new IllegalArgumentException("oauthIssuer cannot be blank");
         }
-        if (oauthJwtSecret == null || oauthJwtSecret.isBlank()) {
-            throw new IllegalArgumentException("oauthJwtSecret cannot be null or blank");
+        if (oauthJwtSecret.isBlank()) {
+            throw new IllegalArgumentException("oauthJwtSecret cannot be blank");
         }
         if (oauthAccessTokenValiditySeconds <= 0) {
             throw new IllegalArgumentException("oauthAccessTokenValiditySeconds must be greater than 0");
@@ -84,6 +86,7 @@ public record Options(
      *                                   <li>WEBMENTION_JWT_SECRET</li>
      *                               </ul>
      */
+    @NotNull
     public static Options fromEnvironment() {
         return new Options(
                 Optional.ofNullable(System.getenv("WEBMENTION_SERVER_PORT")).filter(property -> !property.isBlank()).map(Integer::parseInt).orElse(8080),

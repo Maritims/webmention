@@ -1,5 +1,7 @@
 package no.clueless.webmention.http;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.IOException;
 import java.net.*;
 import java.net.http.HttpClient;
@@ -14,6 +16,7 @@ import java.util.Objects;
  * A secure HTTP client.
  */
 public class SecureHttpClient {
+    @NotNull
     private final HttpClient httpClient;
     private final long       maxContentLengthInBytes;
 
@@ -23,11 +26,11 @@ public class SecureHttpClient {
      * @param httpClient              the underlying HTTP client.
      * @param maxContentLengthInBytes the maximum content length in bytes of a response.
      */
-    public SecureHttpClient(HttpClient httpClient, long maxContentLengthInBytes) {
+    public SecureHttpClient(@NotNull HttpClient httpClient, long maxContentLengthInBytes) {
         if (maxContentLengthInBytes < 1) {
             throw new IllegalArgumentException("maxContentLengthInBytes must be greater than zero");
         }
-        this.httpClient              = Objects.requireNonNull(httpClient, "httpClient cannot be null");
+        this.httpClient              = httpClient;
         this.maxContentLengthInBytes = maxContentLengthInBytes;
     }
 
@@ -39,7 +42,8 @@ public class SecureHttpClient {
      * @throws IOException          if an I/O error occurs
      * @throws InterruptedException if the thread is interrupted
      */
-    public HttpResponse<String> send(HttpRequest httpRequest) throws IOException, InterruptedException {
+    @NotNull
+    public HttpResponse<String> send(@NotNull HttpRequest httpRequest) throws IOException, InterruptedException {
         Objects.requireNonNull(httpRequest);
 
         return httpClient.send(httpRequest, responseInfo -> {
@@ -62,7 +66,7 @@ public class SecureHttpClient {
      * @param uri the URI to check
      * @return true if the URI is restricted, false otherwise
      */
-    private static boolean isRestricted(URI uri) {
+    private static boolean isRestricted(@NotNull URI uri) {
         if (uri.getHost() == null || uri.getHost().isBlank()) {
             return false;
         }
@@ -84,7 +88,8 @@ public class SecureHttpClient {
      * @param blockRestricted whether to block restricted URIs
      * @return the client
      */
-    public static SecureHttpClient newClient(Duration connectTimeout, boolean blockRestricted) {
+    @NotNull
+    public static SecureHttpClient newClient(@NotNull Duration connectTimeout, boolean blockRestricted) {
         var httpClient = HttpClient.newBuilder()
                 .connectTimeout(connectTimeout)
                 .followRedirects(HttpClient.Redirect.NORMAL)

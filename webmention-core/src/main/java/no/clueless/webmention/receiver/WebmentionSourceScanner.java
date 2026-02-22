@@ -1,12 +1,16 @@
 package no.clueless.webmention.receiver;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Optional;
 
 @FunctionalInterface
 public interface WebmentionSourceScanner {
-    Optional<String> findTargetUrlMention(String body, String targetUrl);
+    @NotNull
+    Optional<String> findTargetUrlMention(@NotNull String body, @NotNull String targetUrl);
 
-    static WebmentionSourceScanner resolve(String contentType) {
+    @NotNull
+    static WebmentionSourceScanner resolve(@NotNull String contentType) {
         if (contentType.startsWith("text/html")) {
             return new WebmentionHtmlSourceScanner();
         }
