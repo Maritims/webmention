@@ -21,6 +21,8 @@ public class CommandProcessor {
     public CommandProcessor() {
         commands.put("find-and-send-webmentions", FindAndSendWebmentions::new);
         commands.put("get-webmentions", GetWebmentions::new);
+        commands.put("update-webmention-approval", UpdateWebmentionApproval::new),
+        commands.put("delete-webmention", DeleteWebmention::new),
         commands.put("version", Version::new);
         commands.put("help", Help::new);
     }
