@@ -13,6 +13,7 @@
         <module>webmention-cli</module>
         <module>oauth2-javalin</module>
         <module>webmention-api-client</module>
+        <module>interceptable-http-client</module>
     </modules>
 
     <name>Webmention Parent</name>

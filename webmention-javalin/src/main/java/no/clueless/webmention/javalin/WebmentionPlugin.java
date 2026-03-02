@@ -144,7 +144,10 @@ public class WebmentionPlugin extends Plugin<Void> {
                 get(ctx -> {
                     var pageNumber          = ctx.queryParamAsClass("pageNumber", Integer.class).getOrDefault(0);
                     var pageSize            = ctx.queryParamAsClass("pageSize", Integer.class).getOrDefault(10);
-                    var orderByColumn       = ctx.queryParamAsClass("orderByColumn", String.class).getOrDefault(webmentionRepository.getOrderByColumn());
+                    var orderByColumn       = Optional.ofNullable(ctx.queryParamAsClass("orderByColumn", String.class)
+                            .allowNullable()
+                            .check(str -> "id".equals(str) || "name".equals(str) || "message".equals(str) || "timestamp".equals(str), "orderByColumn must be one of: id, name, message, timestamp")
+                            .get()).orElseGet(webmentionRepository::getOrderByColumn);
                     var orderByDirection    = ctx.queryParamAsClass("orderByDirection", String.class).getOrDefault(webmentionRepository.getOrderByDirection());
                     var approvedWebmentions = webmentionRepository.getWebmentionsByIsApproved(pageNumber, pageSize, orderByColumn, orderByDirection, true);
                     ctx.json(approvedWebmentions);

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configuration>
+<configuration debug="false">
     <property name="CONFIG_LOG_LEVEL" value="${WEBMENTION_LOG_LEVEL:-INFO}"/>
-
     <timestamp key="bySecond" datePattern="yyyyMMdd_HHmmss"/>
 
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
@@ -18,9 +17,11 @@
         </encoder>
     </appender>
 
-    <root level="${CONFIG_LOG_LEVEL}">
+    <root level="WARN">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="FILE"/>
     </root>
+
+    <logger name="no.clueless" level="${CONFIG_LOG_LEVEL}" />
 
 </configuration>

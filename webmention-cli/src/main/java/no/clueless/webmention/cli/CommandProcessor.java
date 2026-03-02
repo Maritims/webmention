@@ -1,58 +1,39 @@
 package no.clueless.webmention.cli;
 
-import no.clueless.webmention.cli.commands.*;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Supplier;
+import java.util.Arrays;
 
 public class CommandProcessor {
-    private static final Logger log = LoggerFactory.getLogger(CommandProcessor.class);
+    private static final Logger          log = LoggerFactory.getLogger(CommandProcessor.class);
     @NotNull
-    private final Map<String, Supplier<Command>> commands = new HashMap<>();
+    private final        CommandRegistry registry;
 
-    public CommandProcessor() {
-        commands.put("find-and-send-webmentions", FindAndSendWebmentions::new);
-        commands.put("get-webmentions", WebmentionManagementCommand::new);
-        commands.put("publish-webmention", WebmentionManagementCommand::new);
-        commands.put("unpublish-webmention", WebmentionManagementCommand::new);
-        commands.put("delete-webmention", WebmentionManagementCommand::new);
-        commands.put("version", Version::new);
-        commands.put("help", Help::new);
+    public CommandProcessor(@NotNull CommandRegistry registry) {
+        this.registry = registry;
     }
 
-    public void process(@NotNull String[] args) {
-        if (args.length == 0) {
-            commands.get("help").get().execute(args);
+    public void run(@NotNull String[] args) {
+        if (args.length < 2) {
+            log.error("Missing command");
+            registry.printHelp();
             return;
         }
 
-        var label   = args[0].toLowerCase();
-        var command = commands.get(label);
-
-        if (command == null) {
-            commands.get("help").get().execute(args);
-            System.exit(1);
-        }
-
-        log.debug("Executing command {}", label);
-
-        var result = command.get().execute(args);
-        switch (result) {
-            case MISSING_REQUIRED_ARGUMENT, UNKNOWN_ARGUMENT -> {
-                log.error("Invalid arguments for command {}. See logs for details", label);
-
-                commands.get("help").get().execute(args);
-                System.exit(1);
+        var commandName = args[1];
+        registry.find(commandName).ifPresentOrElse(commandFactory -> {
+            try {
+                var command = commandFactory.createCommand(Arrays.copyOfRange(args, 2, args.length));
+                command.run();
+            } catch (IllegalArgumentException e) {
+                log.error("An exception occurred", e);
+                registry.printHelp();
+            } catch (Command.Factory.FactoryException e) {
+                log.error("Command \"{}\" could not be created: {} (the args were {})", commandName, e.getMessage(), e.getArgs());
+                registry.printHelp();
             }
-            case FAILURE -> {
-                log.error("Failed to execute command {}. See logs for details", label);
-                System.exit(1);
-            }
-            case SUCCESS -> System.exit(0);
-        }
+        }, () -> log.error("Unknown command: {}", commandName));
     }
 }

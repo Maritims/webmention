@@ -4,6 +4,8 @@ import no.clueless.webmention.persistence.Webmention;
 import no.clueless.webmention.persistence.WebmentionRepository;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.time.ZoneId;
@@ -12,6 +14,8 @@ import java.util.List;
 import java.util.Optional;
 
 public class SqliteWebmentionRepository extends SqliteBaseRepository<Webmention> implements WebmentionRepository {
+    private static final Logger log = LoggerFactory.getLogger(SqliteWebmentionRepository.class);
+
     public SqliteWebmentionRepository(String connectionString) {
         super(connectionString, """
                 CREATE TABLE IF NOT EXISTS webmentions (
@@ -151,7 +155,7 @@ public class SqliteWebmentionRepository extends SqliteBaseRepository<Webmention>
             statement.setInt(1, id);
             var result = statement.executeUpdate();
             if(result == 0) {
-                throw new RuntimeException("Failed to delete webmention");
+                log.warn("Nothing was deleted. The id was {}", id);
             }
         } catch (SQLException e) {
             throw new RuntimeException("Failed to connect to database", e);

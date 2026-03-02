@@ -19,7 +19,7 @@ public record Pagination(int page, int size, @NotNull String orderByColumn, @Not
     }
 
     public Pagination(int page, int size) {
-        this(page, size, "created", "desc");
+        this(page, size, "id", "desc");
     }
 
     public Pagination() {
