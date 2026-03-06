@@ -1,39 +1,47 @@
 package no.clueless.webmention.cli;
 
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 
 public class CommandProcessor {
-    private static final Logger          log = LoggerFactory.getLogger(CommandProcessor.class);
     @NotNull
-    private final        CommandRegistry registry;
+    private final CommandRegistry registry;
 
     public CommandProcessor(@NotNull CommandRegistry registry) {
+        if (registry.isEmpty()) {
+            throw new IllegalArgumentException("registry cannot be empty");
+        }
         this.registry = registry;
     }
 
+    protected void printGeneralHelp() {
+        System.out.println("webmention-cli: try 'webmention-cli help' for more information");
+        System.exit(2);
+    }
+
+    protected void printUnknownArgHelp(@NotNull String arg) {
+        System.out.println("webmention-cli: argument '" + arg + "' (quotes added)");
+    }
+
     public void run(@NotNull String[] args) {
-        if (args.length < 2) {
-            log.error("Missing command");
-            registry.printHelp();
+        if (args.length <= 1) {
+            printGeneralHelp();
             return;
         }
 
         var commandName = args[1];
         registry.find(commandName).ifPresentOrElse(commandFactory -> {
             try {
-                var command = commandFactory.createCommand(Arrays.copyOfRange(args, 2, args.length));
+                var commandArgs = Arrays.copyOfRange(args, 2, args.length);
+                var command     = commandFactory.createCommand(commandArgs);
                 command.run();
-            } catch (IllegalArgumentException e) {
-                log.error("An exception occurred", e);
-                registry.printHelp();
             } catch (Command.Factory.FactoryException e) {
-                log.error("Command \"{}\" could not be created: {} (the args were {})", commandName, e.getMessage(), e.getArgs());
-                registry.printHelp();
+                throw new RuntimeException(e);
             }
-        }, () -> log.error("Unknown command: {}", commandName));
+        }, () -> {
+            printUnknownArgHelp(commandName);
+            printGeneralHelp();
+        });
     }
 }

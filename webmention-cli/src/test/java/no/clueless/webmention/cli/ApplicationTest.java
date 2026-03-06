@@ -1,24 +1,57 @@
 package no.clueless.webmention.cli;
 
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import java.util.stream.Stream;
+import static org.mockito.Mockito.*;
 
 class ApplicationTest {
+    CommandProcessor commandProcessor;
+    Application      sut;
 
-    public static Stream<Arguments> run_main() {
-        return Stream.of(
-                Arguments.of(new String[] { "wm-cli", "get-webmentions", "--uri", "foobar" }, ""),
-                Arguments.of(new String[] { "wm-cli", "get-webmentions", "--uri" }, ""),
-                Arguments.of(new String[] { "wm-cli", "get-webmentions", "--uri", "http://localhost:7070/webmention/manage" }, "")
-        );
+    @BeforeEach
+    void setUp() {
+        commandProcessor = mock(CommandProcessor.class);
+        sut              = spy(new Application(commandProcessor));
     }
 
-    @ParameterizedTest
-    @MethodSource
-    void run_main(String[] args, String ignored) {
-        Application.main(args);
+    @Test
+    void run_should_call_handleEmptyArgs_when_args_are_empty() {
+        // arrange
+        doNothing().when(sut).handleEmptyArgs();
+
+        // act
+        sut.run(new String[0]);
+
+        // assert
+        verify(sut, times(1)).handleEmptyArgs();
+        verify(commandProcessor, never()).run(any());
+    }
+
+    @Test
+    void run_should_call_handleEmptyArgs_when_there_is_only_one_arg() {
+        // arrange
+        doNothing().when(sut).handleEmptyArgs();
+        var args = new String[]{"foo"};
+
+        // act
+        sut.run(args);
+
+        // assert
+        verify(sut, times(1)).handleEmptyArgs();
+        verify(commandProcessor, never()).run(any());
+    }
+
+    @Test
+    void run_should_call_commandProcessor_when_there_is_more_than_one_arg() {
+        // arrange
+        var args = new String[]{"foo", "bar"};
+
+        // act
+        sut.run(args);
+
+        // assert
+        verify(sut, never()).handleEmptyArgs();
+        verify(commandProcessor, times(1)).run(eq(new String[]{"bar"}));
     }
 }

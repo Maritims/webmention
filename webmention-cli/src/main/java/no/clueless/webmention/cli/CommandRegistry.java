@@ -26,4 +26,8 @@ public class CommandRegistry {
                 .map(entry -> String.format("%s - %s", entry.getKey(), entry.getValue().help()))
                 .collect(Collectors.joining("\n")));
     }
+
+    public boolean isEmpty() {
+        return commandFactories.isEmpty();
+    }
 }

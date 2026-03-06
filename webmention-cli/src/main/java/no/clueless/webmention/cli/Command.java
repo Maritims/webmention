@@ -83,17 +83,32 @@ public interface Command extends Runnable {
         }
     }
 
+    abstract class CommandBase implements Command {
+        @NotNull
+        private final String name;
+        @NotNull
+        private final Runnable runnable;
+
+        protected CommandBase(@NotNull String name, @NotNull Runnable runnable) {
+            this.name = name;
+            this.runnable = runnable;
+        }
+
+        @Override
+        public String name() {
+            return name;
+        }
+
+        @Override
+        public void run() {
+            runnable.run();
+        }
+    }
+
     interface Factory<T extends Command> {
         class FactoryException extends Exception {
-            private final String[] args;
-
-            public FactoryException(@NotNull String message, String[] args) {
+            public FactoryException(@NotNull String message) {
                 super(message);
-                this.args = args;
-            }
-
-            public String[] getArgs() {
-                return args;
             }
         }
 
@@ -113,7 +128,7 @@ public interface Command extends Runnable {
 
                     if (parameter.requiresValue()) {
                         if (i == args.length - 1) {
-                            throw new FactoryException("missing value for parameter \"" + parameter.longName() + "\" (quotes added)", args);
+                            throw new FactoryException("missing value for parameter \"" + parameter.longName() + "\" (quotes added)");
                         }
 
                         var rawArg = args[++i];
@@ -122,11 +137,11 @@ public interface Command extends Runnable {
                         try {
                             parsedArg = parameter.parser().apply(rawArg);
                         } catch (Exception e) {
-                            throw new FactoryException("argument \"" + rawArg + "\" (quotes added) could not be parsed", args);
+                            throw new FactoryException("argument \"" + rawArg + "\" (quotes added) could not be parsed");
                         }
 
                         if (parameter.validator() != null && !Objects.requireNonNull(parameter.validator()).test(parsedArg)) {
-                            throw new FactoryException("argument \"" + rawArg + "\" (quotes added) was successfully parsed, but failed validation", args);
+                            throw new FactoryException("argument \"" + rawArg + "\" (quotes added) was successfully parsed, but failed validation");
                         }
 
                         map.put(parameter.longName(), parsedArg);
@@ -140,14 +155,14 @@ public interface Command extends Runnable {
 
             for (var parameter : parameters()) {
                 if (parameter.required() && !map.containsKey(parameter.longName())) {
-                    throw new FactoryException("missing required parameter \"" + parameter.longName() + "\" (quotes added)", args);
+                    throw new FactoryException("missing required parameter \"" + parameter.longName() + "\" (quotes added)");
                 } else if (!parameter.required() && !map.containsKey(parameter.longName())) {
                     map.put(parameter.longName(), parameter.defaultValue());
                 }
             }
 
             if (!map.containsKey("uri")) {
-                throw new FactoryException("uri is required", args);
+                throw new FactoryException("uri is required");
             }
 
             return map;

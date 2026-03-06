@@ -1,26 +1,18 @@
 package no.clueless.webmention.cli;
 
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
-
-import java.util.stream.Stream;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
 
 class CommandRegistryTest {
-
-    public static Stream<Arguments> find() {
-        return Stream.of(
-                Arguments.of("discover"),
-                Arguments.of("send")
-        );
+    @Test
+    void isEmpty_should_return_true_when_registry_is_empty() {
+        assertTrue(new CommandRegistry().isEmpty());
     }
 
-    @ParameterizedTest
-    @MethodSource
-    void find(String name) {
-        var actual = new CommandRegistry().find(name).orElse(null);
-        assertNotNull(actual);
+    @Test
+    void isEmpty_should_return_false_when_registry_is_not_empty() {
+        assertFalse(new CommandRegistry().register("foobar", mock()).isEmpty());
     }
 }
