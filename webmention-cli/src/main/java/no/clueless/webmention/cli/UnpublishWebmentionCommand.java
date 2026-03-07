@@ -4,43 +4,28 @@ import no.clueless.webmention.api_client.WebmentionManagementApiClient;
 import org.jetbrains.annotations.NotNull;
 
 import java.net.URI;
-import java.util.List;
 
-public class UnpublishWebmentionCommand implements Command {
+@Command(
+        name = "unpublish-webmention",
+        description = "Unpublishes a webmention by its id.",
+        parameters = {
+                @CommandParameter(longName = "uri", shortName = "u", description = "The webmention management API URI.", requiresValue = true, required = true, type = URI.class),
+                @CommandParameter(longName = "id", shortName = "i", description = "The webmention id.", requiresValue = true, required = true, type = Integer.class)
+        }
+)
+public class UnpublishWebmentionCommand extends CommandBase {
     @NotNull
     private final WebmentionManagementApiClient webmentionManagementApiClient;
     private final int                           webmentionId;
 
-    public UnpublishWebmentionCommand(@NotNull WebmentionManagementApiClient webmentionManagementApiClient, int webmentionId) {
-        this.webmentionManagementApiClient = webmentionManagementApiClient;
-        this.webmentionId                  = webmentionId;
-    }
-
-    @Override
-    public String name() {
-        return "unpublish-webmention";
+    public UnpublishWebmentionCommand(@NotNull String[] args) {
+        var argsMap = getArgs(args, UnpublishWebmentionCommand.class);
+        this.webmentionManagementApiClient = new WebmentionManagementApiClient((URI) argsMap.get("uri"));
+        this.webmentionId                  = (Integer) argsMap.get("id");
     }
 
     @Override
     public void run() {
         webmentionManagementApiClient.unpublishWebmention(webmentionId);
-    }
-
-    public static final class Factory implements Command.Factory<UnpublishWebmentionCommand> {
-        @Override
-        public @NotNull List<Parameter<?>> parameters() {
-            return List.of(new Parameter<>("id", "i", "The webmention id.", true, true, null, Integer::parseInt, null));
-        }
-
-        @Override
-        public @NotNull UnpublishWebmentionCommand createCommand(@NotNull String[] args) throws FactoryException {
-            var argsMap = getArgs(args);
-            return new UnpublishWebmentionCommand(new WebmentionManagementApiClient((URI) argsMap.get("uri")), (Integer) argsMap.get("id"));
-        }
-
-        @Override
-        public @NotNull String description() {
-            return "Unpublish a webmention.";
-        }
     }
 }

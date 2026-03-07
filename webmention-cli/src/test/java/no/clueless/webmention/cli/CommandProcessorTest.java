@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
+import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -16,9 +17,6 @@ class CommandProcessorTest {
     void setUp() {
         commandRegistry = mock(CommandRegistry.class);
         sut             = spy(new CommandProcessor(commandRegistry));
-
-        doNothing().when(sut).printGeneralHelp();
-        doNothing().when(sut).printUnknownArgHelp(anyString());
     }
 
     @Test
@@ -32,67 +30,40 @@ class CommandProcessorTest {
     }
 
     @Test
-    void run_should_call_printGeneralHelp_when_args_are_empty() {
-        // arrange
-        // act
-        sut.run(new String[0]);
-
-        // assert
-        verify(commandRegistry, never()).find(anyString());
-        verify(sut, times(1)).printGeneralHelp();
-    }
-
-    @Test
-    void run_should_call_printGeneralHelp_when_there_is_only_one_arg() {
-        // arrange
-        // act
-        sut.run(new String[]{"foobar"});
-
-        // assert
-        verify(commandRegistry, never()).find(anyString());
-        verify(sut, times(1)).printGeneralHelp();
+    void run_should_call_throw_when_args_are_empty() {
+        assertThrows(CommandNotSpecifiedException.class, () -> sut.run(new String[0]));
     }
 
     @Test
     void run_should_call_printUnknownArgHelp_and_printGeneralHelp_when_command_is_not_found() {
-        // arrange
-        // act
-        sut.run(new String[]{"foo", "bar"});
-
-        // assert
-        verify(commandRegistry, times(1)).find(eq("bar"));
-        verify(sut, times(1)).printUnknownArgHelp(eq("bar"));
-        verify(sut, times(1)).printGeneralHelp();
+        assertThrows(CommandNotFoundException.class, () -> sut.run(new String[]{"bar"}));
     }
 
     @Test
-    void run_should_rethrow_printException_when_createCommand_throws_anything() {
+    void run_should_rethrow_when_createCommand_throws_anything() {
         // arrange
         doThrow(new RuntimeException("foo")).when(commandRegistry).find(anyString());
 
         // act
-        assertThrows(RuntimeException.class, () -> sut.run(new String[]{"foo", "bar"}));
+        assertThrows(RuntimeException.class, () -> sut.run(new String[]{"bar"}));
 
         // assert
-        verify(sut, never()).printGeneralHelp();
-        verify(sut, never()).printUnknownArgHelp(anyString());
-        verify(commandRegistry, times(1)).find(eq("bar"));
+        verify(commandRegistry, atLeastOnce().description("No attempt was made at invoking the command \"bar\"")).find(eq("bar"));
     }
 
     @Test
-    void run_should_call_create_and_run_command_when_command_factory_is_found() throws Command.Factory.FactoryException {
+    void run_should_create_and_run_command_when_command_factory_is_found() throws CommandNotSpecifiedException, CommandNotFoundException {
         // arrange
-        var command        = mock(Command.class);
-        var commandFactory = mock(Command.Factory.class);
-        when(commandFactory.createCommand(any())).thenReturn(command);
-        //noinspection unchecked
-        when(commandRegistry.find(eq("bar"))).thenReturn(Optional.of(commandFactory));
+        var command = mock(CommandBase.class);
+        var commandFactory = mock(Function.class);
+        when(commandFactory.apply(any())).thenReturn(command);
+        when(commandRegistry.find(eq("foo"))).thenReturn(Optional.of(commandFactory));
 
         // act
-        sut.run(new String[]{"foo", "bar", "baz"});
+        sut.run(new String[]{"foo"});
 
         // assert
-        verify(commandFactory, times(1)).createCommand(eq(new String[]{"baz"}));
+        verify(commandFactory, times(1)).apply(eq(new String[]{}));
         verify(command, times(1)).run();
     }
 }

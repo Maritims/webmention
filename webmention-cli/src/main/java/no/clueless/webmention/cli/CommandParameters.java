@@ -1,14 +1,11 @@
 package no.clueless.webmention.cli;
 
+import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 @Retention( java.lang.annotation.RetentionPolicy.RUNTIME)
-@Target( java.lang.annotation.ElementType.TYPE)
-public @interface Command {
-    String name();
-
-    String description();
-
-    CommandParameter[] parameters();
+@Target(ElementType.TYPE)
+public @interface CommandParameters {
+    CommandParameter[] value();
 }

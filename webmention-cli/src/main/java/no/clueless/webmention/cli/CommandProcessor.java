@@ -15,33 +15,28 @@ public class CommandProcessor {
         this.registry = registry;
     }
 
-    protected void printGeneralHelp() {
-        System.out.println("webmention-cli: try 'webmention-cli help' for more information");
-        System.exit(2);
-    }
-
-    protected void printUnknownArgHelp(@NotNull String arg) {
-        System.out.println("webmention-cli: argument '" + arg + "' (quotes added)");
-    }
-
-    public void run(@NotNull String[] args) {
-        if (args.length <= 1) {
-            printGeneralHelp();
-            return;
+    /**
+     * Runs the command processor.
+     *
+     * @param args the command line arguments. The first argument must always be the command name.
+     */
+    public void run(@NotNull String[] args) throws CommandNotFoundException, CommandNotSpecifiedException {
+        if (args.length == 0) {
+            throw new CommandNotSpecifiedException();
         }
 
-        var commandName = args[1];
-        registry.find(commandName).ifPresentOrElse(commandFactory -> {
-            try {
-                var commandArgs = Arrays.copyOfRange(args, 2, args.length);
-                var command     = commandFactory.createCommand(commandArgs);
-                command.run();
-            } catch (Command.Factory.FactoryException e) {
-                throw new RuntimeException(e);
-            }
-        }, () -> {
-            printUnknownArgHelp(commandName);
-            printGeneralHelp();
-        });
+        var commandName    = args[0];
+        var commandFactory = registry.find(commandName).orElse(null);
+
+        if (commandFactory == null) {
+            throw new CommandNotFoundException(commandName);
+        }
+
+        var commandArgs = Arrays.copyOfRange(args, 1, args.length);
+        var command     = commandFactory.apply(commandArgs);
+        if (command == null) {
+            throw new CommandNotFoundException(commandName);
+        }
+        command.run();
     }
 }

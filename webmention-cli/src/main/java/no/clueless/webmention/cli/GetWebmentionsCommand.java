@@ -8,9 +8,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URI;
-import java.util.List;
 
-public class GetWebmentionsCommand implements Command, Runnable {
+@Command(
+        name = "get-webmentions",
+        description = "Gets webmentions on behalf of a given base URI.",
+        parameters = {
+                @CommandParameter(longName = "uri", shortName = "u", description = "uri", required = true, requiresValue = true, type = URI.class),
+                @CommandParameter(longName = "page", shortName = "p", description = "The page number.", requiresValue = true, defaultValue = "0", type = Integer.class),
+                @CommandParameter(longName = "size", shortName = "s", description = "The page size.", requiresValue = true, defaultValue = "10", type = Integer.class),
+                @CommandParameter(longName = "is-approved", shortName = "a", description = "Whether to only get approved webmentions.", defaultValue = "false", type = Boolean.class)
+        }
+)
+public class GetWebmentionsCommand extends CommandBase {
     private static final Logger log = LoggerFactory.getLogger(GetWebmentionsCommand.class);
 
     @NotNull
@@ -19,11 +28,12 @@ public class GetWebmentionsCommand implements Command, Runnable {
     private final int                           size;
     private final boolean                       isApproved;
 
-    public GetWebmentionsCommand(@NotNull WebmentionManagementApiClient webmentionManagementApiClient, int page, int size, boolean isApproved) {
-        this.webmentionManagementApiClient = webmentionManagementApiClient;
-        this.page                          = page;
-        this.size                          = size;
-        this.isApproved                    = isApproved;
+    public GetWebmentionsCommand(@NotNull String[] args) {
+        var argsMap = getArgs(args, GetWebmentionsCommand.class);
+        this.webmentionManagementApiClient = new WebmentionManagementApiClient(getArgOfTypeOrThrow(argsMap, "uri", URI.class));
+        this.page                          = getArgOfTypeOrThrow(argsMap, "page", Integer.class);
+        this.size                          = getArgOfTypeOrThrow(argsMap, "size", Integer.class);
+        this.isApproved                    = getArgOfTypeOrThrow(argsMap, "is-approved", Boolean.class);
     }
 
     @Override
@@ -32,33 +42,15 @@ public class GetWebmentionsCommand implements Command, Runnable {
     }
 
     @Override
+    public @NotNull String description() {
+        return "Get webmentions on behalf of a given base URI.";
+    }
+
+    @Override
     public void run() {
         webmentionManagementApiClient.getWebmentions(new Pagination(page, size), isApproved)
                 .stream()
                 .map(Webmention::toString)
                 .forEach(log::info);
-    }
-
-    public static class Factory implements Command.Factory<GetWebmentionsCommand> {
-        @Override
-        public @NotNull List<Parameter<?>> parameters() {
-            return List.of(
-                    URIParameter.required("uri", "u", "URI to get webmentions for."),
-                    new Parameter<>("page", "p", "The page number.", false, true, 0, Integer::parseInt, null),
-                    new Parameter<>("size", "s", "The page size.", false, true, 10, Integer::parseInt, null),
-                    new Parameter<>("is-approved", "a", "Whether to only get approved webmentions.", false, true, false, Boolean::parseBoolean, null)
-            );
-        }
-
-        @Override
-        public @NotNull GetWebmentionsCommand createCommand(@NotNull String[] args) throws FactoryException {
-            var argsMap = getArgs(args);
-            return new GetWebmentionsCommand(new WebmentionManagementApiClient((URI) argsMap.get("uri")), (Integer) argsMap.get("page"), (Integer) argsMap.get("size"), (Boolean) argsMap.get("is-approved"));
-        }
-
-        @Override
-        public @NotNull String description() {
-            return "Get webmentions on behalf of a given base URI.";
-        }
     }
 }

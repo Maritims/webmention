@@ -12,10 +12,19 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Set;
 
-public class SendWebmentionsCommand implements Command {
+@Command(
+        name = "send-webmention",
+        description = "Sends a webmention.",
+        parameters = {
+                @CommandParameter(longName = "uri", shortName = "u", description = "uri", required = true, requiresValue = true, type = URI.class),
+                @CommandParameter(longName = "dir", shortName = "d", description = "Path to scan for webmentions.", requiresValue = true, type = Path.class),
+                @CommandParameter(longName = "dry-run", shortName = "dr", description = "Dry run.", type = Boolean.class, defaultValue = "true"),
+                @CommandParameter(longName = "restrictive", shortName = "r", description = "Restrictive mode.", type = Boolean.class, defaultValue = "false")
+        }
+)
+public class SendWebmentionsCommand extends CommandBase {
     private static final Logger log = LoggerFactory.getLogger(SendWebmentionsCommand.class);
 
     @NotNull
@@ -29,13 +38,14 @@ public class SendWebmentionsCommand implements Command {
     private final boolean                   dryRun;
     private final boolean                   restrictive;
 
-    public SendWebmentionsCommand(@NotNull WebmentionApiClient webmentionApiClient, @NotNull WebmentionDirectoryWalker webmentionDirectoryWalker, @NotNull URI baseUri, @NotNull Path dir, boolean dryRun, boolean restrictive) {
-        this.webmentionApiClient       = webmentionApiClient;
-        this.webmentionDirectoryWalker = webmentionDirectoryWalker;
-        this.baseUri                   = baseUri;
-        this.dir                       = dir;
-        this.dryRun                    = dryRun;
-        this.restrictive               = restrictive;
+    public SendWebmentionsCommand(@NotNull String[] args) {
+        var argsMap = getArgs(args, SendWebmentionsCommand.class);
+        this.webmentionApiClient       = new WebmentionApiClient((URI) argsMap.get("uri"), HttpClient.newHttpClient());
+        this.webmentionDirectoryWalker = new WebmentionDirectoryWalker(new WebmentionHtmlSourceScanner(), Set.of("html"));
+        this.baseUri                   = (URI) argsMap.get("uri");
+        this.dir                       = (Path) argsMap.get("dir");
+        this.dryRun                    = (Boolean) argsMap.get("dry-run");
+        this.restrictive               = (Boolean) argsMap.get("restrictive");
     }
 
     @Override
@@ -59,28 +69,5 @@ public class SendWebmentionsCommand implements Command {
                 webmentionApiClient.postWebmention(Webmention.newWebmention(webmentionEvent.sourceUrl(), webmentionEvent.targetUrl(), webmentionEvent.mentionText()));
             }
         });
-    }
-
-    public static class Factory implements Command.Factory<SendWebmentionsCommand> {
-        @Override
-        public @NotNull List<Parameter<?>> parameters() {
-            return List.of(
-                    URIParameter.required("--uri", "-u", "URI to send webmentions for."),
-                    new Parameter<>("--dir", "-d", "Path to scan for webmentions.", true, true, null, Path::of, null),
-                    new Parameter<>("--dry-run", "-dr", "Dry run.", false, false, true, ignored -> true, null),
-                    new Parameter<>("--restrictive", "-r", "Restrictive mode.", false, false, true, ignored -> true, null)
-            );
-        }
-
-        @Override
-        public @NotNull SendWebmentionsCommand createCommand(@NotNull String[] args) throws FactoryException {
-            var argsMap = getArgs(args);
-            return new SendWebmentionsCommand(new WebmentionApiClient((URI) argsMap.get("uri"), HttpClient.newHttpClient()), new WebmentionDirectoryWalker(new WebmentionHtmlSourceScanner(), Set.of("html")), (URI) argsMap.get("uri"), (Path) argsMap.get("dir"), (Boolean) argsMap.get("dry-run"), (Boolean) argsMap.get("restrictive"));
-        }
-
-        @Override
-        public @NotNull String description() {
-            return "Sends webmentions on behalf of a given base URI.";
-        }
     }
 }
