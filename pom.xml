@@ -238,6 +238,58 @@
                     </excludeArtifacts>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>kr.motd.maven</groupId>
+                <artifactId>os-maven-plugin</artifactId>
+                <version>1.7.1</version>
+                <executions>
+                    <execution>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>detect</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.jreleaser</groupId>
+                <artifactId>jreleaser-maven-plugin</artifactId>
+                <version>1.22.0</version>
+                <configuration>
+                    <jreleaser>
+                        <project>
+                            <copyright>Copyright (c) 2026 Martin Severin Steffensen</copyright>
+                            <stereotype>CLI</stereotype>
+                            <version>${env.WEBMENTION_VERSION}</version>
+                        </project>
+                        <upload>
+                            <active>ALWAYS</active>
+                        </upload>
+                        <release>
+                            <github>
+                                <owner>Maritims</owner>
+                                <overwrite>true</overwrite>
+                                <prerelease>
+                                    <enabled>true</enabled>
+                                </prerelease>
+                                <tagName>{{projectName}}-{{projectVersion}}</tagName>
+                                <releaseName>{{tagName}}</releaseName>
+                            </github>
+                        </release>
+                        <distributions>
+                            <webmention-cli>
+                                <type>BINARY</type>
+                                <artifacts>
+                                    <artifact>
+                                        <path>{{distributionName}}/target/{{distributionName}}-{{projectVersion}}-${os.detected.classifier}</path>
+                                        <platform>${os.detected.classifier}</platform>
+                                    </artifact>
+                                </artifacts>
+                            </webmention-cli>
+                        </distributions>
+                    </jreleaser>
+                </configuration>
+            </plugin>
         </plugins>
         <pluginManagement>
             <plugins>

@@ -92,7 +92,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <imageName>${project.artifactId}</imageName>
+                    <imageName>${project.artifactId}-${project.version}-${os.detected.classifier}</imageName>
                 </configuration>
             </plugin>
         </plugins>
