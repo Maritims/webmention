@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import no.clueless.webmention.persistence.Webmention;
+import no.clueless.webmention.core.persistence.Webmention;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -19,17 +19,23 @@ public class WebmentionApiClient {
     @NotNull
     private final        URI          baseUri;
     @NotNull
+    private final        String       endpoint;
+    @NotNull
     private final        HttpClient   httpClient;
 
-    public WebmentionApiClient(@NotNull URI baseUri, @NotNull HttpClient httpClient) {
+    public WebmentionApiClient(@NotNull URI baseUri, @NotNull String endpoint, @NotNull HttpClient httpClient) {
+        if (endpoint.isBlank()) {
+            throw new IllegalArgumentException("endpoint cannot be blank");
+        }
         this.baseUri    = baseUri;
+        this.endpoint   = endpoint;
         this.httpClient = httpClient;
     }
 
     public List<Webmention> getWebmentions(@NotNull Pagination pagination) {
         try {
             var httpRequest = HttpRequest.newBuilder()
-                    .uri(baseUri.resolve("webmention?" + pagination.toQueryString()))
+                    .uri(URI.create(baseUri.resolve(endpoint) + "?" + pagination.toQueryString()))
                     .GET()
                     .build();
             var httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
@@ -56,11 +62,11 @@ public class WebmentionApiClient {
     public void postWebmention(@NotNull Webmention webmention) {
         try {
             var httpRequest = HttpRequest.newBuilder()
-                    .uri(baseUri.resolve("webmention"))
+                    .uri(baseUri.resolve(endpoint))
                     .GET()
                     .build();
             var httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
-            if(httpResponse.statusCode() == 200 || httpResponse.statusCode() == 201 || httpResponse.statusCode() == 202) {
+            if (httpResponse.statusCode() == 200 || httpResponse.statusCode() == 201 || httpResponse.statusCode() == 202) {
                 return;
             }
             throw new RuntimeException("Failed to post webmention: " + httpResponse.body());

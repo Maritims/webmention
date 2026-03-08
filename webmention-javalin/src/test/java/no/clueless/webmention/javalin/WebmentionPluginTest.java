@@ -2,10 +2,11 @@ package no.clueless.webmention.javalin;
 
 import io.javalin.Javalin;
 import io.javalin.testtools.JavalinTest;
-import no.clueless.oauth.*;
-import no.clueless.webmention.persistence.Webmention;
-import no.clueless.webmention.persistence.WebmentionRepository;
-import no.clueless.webmention.receiver.WebmentionProcessor;
+import no.clueless.oauth.javalin.OAuthResourceServerPlugin;
+import no.clueless.oauth2.core.OAuthPrincipal;
+import no.clueless.webmention.core.persistence.Webmention;
+import no.clueless.webmention.core.persistence.WebmentionRepository;
+import no.clueless.webmention.core.receiver.WebmentionProcessor;
 import okhttp3.Headers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,8 +49,8 @@ class WebmentionPluginTest {
 
     @BeforeEach
     void setUp() {
-        var tokenValidator         = mock(TokenValidator.class);
-        var administratorPrincipal = new OAuthPrincipal("administrator", Set.of(Scope.WEBMENTIONS_MANAGE), "client_credentials");
+        var tokenValidator         = mock(no.clueless.oauth2.core.TokenValidator.class);
+        var administratorPrincipal = new OAuthPrincipal("administrator", Set.of("webmentions:manage"), "client_credentials");
         when(tokenValidator.validate(administratorBearerToken)).thenReturn(administratorPrincipal);
 
         var webmentionRepository = mock(WebmentionRepository.class);
@@ -67,7 +68,9 @@ class WebmentionPluginTest {
         JavalinTest.test(app, (server, httpClient) -> {
             var response     = httpClient.get("/webmention");
             var responseBody = response.body();
-            assertEquals(200, response.code());
+            assertNotNull(responseBody);
+            var responseString = responseBody.string();
+            assertEquals(200, response.code(), responseString);
             assertNotNull(responseBody);
         });
     }

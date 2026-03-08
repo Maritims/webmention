@@ -4,7 +4,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
-import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -30,8 +29,8 @@ class CommandProcessorTest {
     }
 
     @Test
-    void run_should_call_throw_when_args_are_empty() {
-        assertThrows(CommandNotSpecifiedException.class, () -> sut.run(new String[0]));
+    void run_should_throw_IllegalArgumentException_when_args_are_empty() {
+        assertThrows(IllegalArgumentException.class, () -> sut.run(new String[0]));
     }
 
     @Test
@@ -52,18 +51,18 @@ class CommandProcessorTest {
     }
 
     @Test
-    void run_should_create_and_run_command_when_command_factory_is_found() throws CommandNotSpecifiedException, CommandNotFoundException {
+    void run_should_create_and_run_command_when_command_factory_is_found() throws CommandNotFoundException, MissingRequiredParameter, InvalidParameterValueException {
         // arrange
         var command = mock(CommandBase.class);
-        var commandFactory = mock(Function.class);
-        when(commandFactory.apply(any())).thenReturn(command);
+        var commandFactory = mock(CommandBase.Creator.class);
+        when(commandFactory.create(any())).thenReturn(command);
         when(commandRegistry.find(eq("foo"))).thenReturn(Optional.of(commandFactory));
 
         // act
         sut.run(new String[]{"foo"});
 
         // assert
-        verify(commandFactory, times(1)).apply(eq(new String[]{}));
+        verify(commandFactory, times(1)).create(eq(new String[]{}));
         verify(command, times(1)).run();
     }
 }

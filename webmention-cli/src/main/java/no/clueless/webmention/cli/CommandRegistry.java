@@ -2,17 +2,16 @@ package no.clueless.webmention.cli;
 
 import java.util.LinkedHashMap;
 import java.util.Optional;
-import java.util.function.Function;
 
 public class CommandRegistry {
-    private final LinkedHashMap<String, Function<String[], ? extends CommandBase>> commandFactories = new LinkedHashMap<>();
+    private final LinkedHashMap<String, CommandBase.Creator> commandFactories = new LinkedHashMap<>();
 
-    public <T extends CommandBase> CommandRegistry register(String name, Function<String[], T> commandFactory) {
-        commandFactories.put(name, commandFactory);
+    public <T extends CommandBase> CommandRegistry register(String name, CommandBase.Creator creator) {
+        commandFactories.put(name, creator);
         return this;
     }
 
-    public Optional<Function<String[], ? extends CommandBase>> find(String name) {
+    public Optional<CommandBase.Creator> find(String name) {
         return Optional.ofNullable(commandFactories.get(name));
     }
 

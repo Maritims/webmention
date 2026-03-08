@@ -20,23 +20,20 @@ public class CommandProcessor {
      *
      * @param args the command line arguments. The first argument must always be the command name.
      */
-    public void run(@NotNull String[] args) throws CommandNotFoundException, CommandNotSpecifiedException {
+    public void run(@NotNull String[] args) throws CommandNotFoundException, MissingRequiredParameter, InvalidParameterValueException {
         if (args.length == 0) {
-            throw new CommandNotSpecifiedException();
+            throw new IllegalArgumentException("args cannot be empty");
         }
 
         var commandName    = args[0];
-        var commandFactory = registry.find(commandName).orElse(null);
+        var creator = registry.find(commandName).orElse(null);
 
-        if (commandFactory == null) {
+        if (creator == null) {
             throw new CommandNotFoundException(commandName);
         }
 
         var commandArgs = Arrays.copyOfRange(args, 1, args.length);
-        var command     = commandFactory.apply(commandArgs);
-        if (command == null) {
-            throw new CommandNotFoundException(commandName);
-        }
+        var command     = creator.create(commandArgs);
         command.run();
     }
 }

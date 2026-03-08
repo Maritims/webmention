@@ -1,0 +1,16 @@
+package no.clueless.webmention.core.persistence;
+
+import org.jetbrains.annotations.NotNull;
+
+@FunctionalInterface
+public interface UpdateExistingEntity<TEntity extends Entity<TId>, TId> {
+    /**
+     * Updates the entityToUpdate with the changes from entityWithChanges.
+     *
+     * @param entityToUpdate    The entity to update. Must exist in the database.
+     * @param entityWithChanges The entity with the changes. Cannot exist in the database.
+     * @return The updated entity.
+     */
+    @NotNull
+    TEntity updateWithSomethingFromEntity(@NotNull TEntity entityToUpdate, @NotNull TEntity entityWithChanges);
+}

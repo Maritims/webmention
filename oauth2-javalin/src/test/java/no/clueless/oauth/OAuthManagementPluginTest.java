@@ -2,6 +2,11 @@ package no.clueless.oauth;
 
 import io.javalin.Javalin;
 import io.javalin.testtools.JavalinTest;
+import no.clueless.oauth.javalin.OAuthManagementPlugin;
+import no.clueless.oauth.javalin.OAuthResourceServerPlugin;
+import no.clueless.oauth2.core.ClientStore;
+import no.clueless.oauth2.core.OAuthPrincipal;
+import no.clueless.oauth2.persistence.inmemory.InMemoryClientStore;
 import okhttp3.Headers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -52,10 +57,10 @@ class OAuthManagementPluginTest {
     @BeforeEach
     void setUp() {
         clientStore = new InMemoryClientStore();
-        clientStore.registerClient("test-id", "test-secret", Set.of(Scope.WEBMENTIONS_MANAGE));
+        clientStore.registerClient("test-id", "test-secret", Set.of("webmentions:manage"));
 
-        var tokenValidator = mock(TokenValidator.class);
-        var oauthPrincipal = new OAuthPrincipal("test-id", Set.of(Scope.CLIENTS_MANAGE), "client_credentials");
+        var tokenValidator = mock(no.clueless.oauth2.core.TokenValidator.class);
+        var oauthPrincipal = new OAuthPrincipal("test-id", Set.of("clients:manage"), "client_credentials");
         when(tokenValidator.validate(administratorAccessToken)).thenReturn(oauthPrincipal);
 
         app = Javalin.create(config -> {

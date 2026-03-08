@@ -6,10 +6,12 @@ import org.jetbrains.annotations.NotNull;
 import java.net.URI;
 
 @Command(
-        name = "unpublish-webmention",
+        name = "unpublish",
         description = "Unpublishes a webmention by its id.",
         parameters = {
-                @CommandParameter(longName = "uri", shortName = "u", description = "The webmention management API URI.", requiresValue = true, required = true, type = URI.class),
+                @CommandParameter(longName = "uri", shortName = "u", description = "The base API URI.", requiresValue = true, required = true, type = URI.class),
+                @CommandParameter(longName = "token-endpoint", shortName = "t", description = "The token endpoint URI.", requiresValue = true, defaultValue = "/oauth/token", type = String.class),
+                @CommandParameter(longName = "management-endpoint", shortName = "m", description = "The webmention management endpoint URI.", requiresValue = true, defaultValue = "/webmention/manage", type = String.class),
                 @CommandParameter(longName = "id", shortName = "i", description = "The webmention id.", requiresValue = true, required = true, type = Integer.class)
         }
 )
@@ -18,9 +20,13 @@ public class UnpublishWebmentionCommand extends CommandBase {
     private final WebmentionManagementApiClient webmentionManagementApiClient;
     private final int                           webmentionId;
 
-    public UnpublishWebmentionCommand(@NotNull String[] args) {
+    public UnpublishWebmentionCommand(@NotNull String[] args) throws MissingRequiredParameter, InvalidParameterValueException {
         var argsMap = getArgs(args, UnpublishWebmentionCommand.class);
-        this.webmentionManagementApiClient = new WebmentionManagementApiClient((URI) argsMap.get("uri"));
+        this.webmentionManagementApiClient = new WebmentionManagementApiClient(
+                getArgOfTypeOrThrow(argsMap, "uri", URI.class),
+                getArgOfTypeOrThrow(argsMap, "token-endpoint", String.class),
+                getArgOfTypeOrThrow(argsMap, "management-endpoint", String.class)
+        );
         this.webmentionId                  = (Integer) argsMap.get("id");
     }
 

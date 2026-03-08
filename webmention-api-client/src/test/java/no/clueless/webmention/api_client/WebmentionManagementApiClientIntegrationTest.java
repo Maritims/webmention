@@ -12,7 +12,7 @@ class WebmentionManagementApiClientIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        sut        = spy(new WebmentionManagementApiClient(URI.create("http://localhost:7070/webmention/manage")));
+        sut        = spy(new WebmentionManagementApiClient(URI.create("http://localhost:7070"), "/oauth/token", "/webmention/manage"));
     }
 
     @Test

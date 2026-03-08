@@ -1,8 +1,11 @@
 package no.clueless.webmention.cli;
 
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URI;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -10,11 +13,20 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 public abstract class CommandBase implements Runnable {
+    private static final Logger log = LoggerFactory.getLogger(CommandBase.class);
+
+    @FunctionalInterface
+    public interface Creator {
+        @NotNull
+        CommandBase create(@NotNull String[] args) throws MissingRequiredParameter, InvalidParameterValueException;
+    }
+
     private static final Map<Class<?>, Function<String, ?>>                                  PARSERS            = new HashMap<>(Map.of(
             Integer.class, Integer::parseInt,
             Boolean.class, Boolean::parseBoolean,
-            URI.class, URI::create,
-            String.class, s -> s
+            Path.class, Path::of,
+            String.class, s -> s,
+            URI.class, URI::create
     ));
     private static final ConcurrentHashMap<Class<? extends CommandBase>, CommandParameter[]> COMMAND_PARAMETERS = new ConcurrentHashMap<>();
 
@@ -23,7 +35,7 @@ public abstract class CommandBase implements Runnable {
     @NotNull
     private final String description;
 
-    protected CommandBase() {
+    protected CommandBase() throws MissingRequiredParameter, InvalidParameterValueException {
         var annotation = this.getClass().getAnnotation(Command.class);
         if (annotation == null) {
             throw new IllegalArgumentException("Command class must be annotated with @Command");
@@ -57,7 +69,11 @@ public abstract class CommandBase implements Runnable {
     }
 
     @NotNull
-    public static <T extends CommandBase> Map<String, Object> getArgs(@NotNull String[] args, @NotNull Class<T> commandClass) {
+    public static <T extends CommandBase> Map<String, Object> getArgs(@NotNull String[] args, @NotNull Class<T> commandClass) throws MissingRequiredParameter, InvalidParameterValueException {
+        if (log.isDebugEnabled()) {
+            log.debug("Parsing args {}", Arrays.toString(args));
+        }
+
         var params = getParameters(commandClass);
         var map    = new HashMap<String, Object>();
 
@@ -82,12 +98,15 @@ public abstract class CommandBase implements Runnable {
 
                     rawArg = args[++i];
                 } else {
-                    rawArg = parameter.defaultValue();
-                    map.put(parameter.longName(), parameter.defaultValue());
+                    rawArg = "true";
                 }
 
-                var parsedArg = parser.apply(rawArg);
-                map.put(parameter.longName(), parsedArg);
+                if(CommandParameterValidators.getValidator(parameter.type()).test(rawArg)) {
+                    var parsedArg = parser.apply(rawArg);
+                    map.put(parameter.longName(), parsedArg);
+                } else {
+                    throw new InvalidParameterValueException(commandClass.getName(), parameter.longName());
+                }
 
                 break;
             }
@@ -95,7 +114,7 @@ public abstract class CommandBase implements Runnable {
 
         for (var parameter : params) {
             if (parameter.required() && !map.containsKey(parameter.longName())) {
-                throw new IllegalArgumentException("missing required parameter \"" + parameter.longName() + "\" (quotes added)");
+                throw new MissingRequiredParameter(commandClass.getAnnotation(Command.class).name(), parameter.longName());
             } else if (!parameter.required() && !map.containsKey(parameter.longName())) {
                 var parser = PARSERS.get(parameter.type());
                 var parsedArg = parser.apply(parameter.defaultValue());
@@ -105,6 +124,10 @@ public abstract class CommandBase implements Runnable {
 
         if (!map.containsKey("uri")) {
             throw new IllegalArgumentException("uri is required");
+        }
+
+        if (log.isDebugEnabled()) {
+            log.debug("Parsed args {}", map);
         }
 
         return map;

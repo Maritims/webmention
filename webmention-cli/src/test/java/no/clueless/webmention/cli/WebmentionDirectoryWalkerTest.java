@@ -1,7 +1,7 @@
 package no.clueless.webmention.cli;
 
-import no.clueless.webmention.event.WebmentionEvent;
-import no.clueless.webmention.receiver.WebmentionHtmlSourceScanner;
+import no.clueless.webmention.core.event.WebmentionEvent;
+import no.clueless.webmention.core.receiver.WebmentionHtmlSourceScanner;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 

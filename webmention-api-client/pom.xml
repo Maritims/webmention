@@ -20,35 +20,30 @@
     <dependencies>
         <dependency>
             <groupId>no.clueless</groupId>
+            <artifactId>webmention-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>no.clueless</groupId>
+            <artifactId>oauth2-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>no.clueless</groupId>
             <artifactId>interceptable-http-client</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>no.clueless</groupId>
-            <artifactId>webmention-core</artifactId>
-            <version>${project.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>no.clueless</groupId>
-            <artifactId>oauth2-javalin</artifactId>
-            <version>${project.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jsr310</artifactId>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>

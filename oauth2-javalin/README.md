@@ -24,7 +24,7 @@ clients.
 
 ```java
 import com.auth0.jwt.algorithms.Algorithm;
-import no.clueless.oauth.DefaultTokenManager;
+import no.clueless.oauth2.core.DefaultTokenManager;
 
 var app = Javalin.create(config -> {
     var clientStore = new SomeClientStoreImplementation(); // Replace this with your implementation.

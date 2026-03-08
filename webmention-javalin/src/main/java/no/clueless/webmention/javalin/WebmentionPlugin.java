@@ -6,9 +6,10 @@ import io.javalin.http.ConflictResponse;
 import io.javalin.http.ContentType;
 import io.javalin.http.NotFoundResponse;
 import io.javalin.plugin.Plugin;
-import no.clueless.oauth.*;
-import no.clueless.webmention.persistence.WebmentionRepository;
-import no.clueless.webmention.receiver.WebmentionProcessor;
+import no.clueless.oauth.javalin.OAuthSecurityGuard;
+import no.clueless.oauth.javalin.Scope;
+import no.clueless.webmention.core.persistence.WebmentionRepository;
+import no.clueless.webmention.core.receiver.WebmentionProcessor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -146,7 +147,7 @@ public class WebmentionPlugin extends Plugin<Void> {
                     var pageSize            = ctx.queryParamAsClass("pageSize", Integer.class).getOrDefault(10);
                     var orderByColumn       = Optional.ofNullable(ctx.queryParamAsClass("orderByColumn", String.class)
                             .allowNullable()
-                            .check(str -> "id".equals(str) || "name".equals(str) || "message".equals(str) || "timestamp".equals(str), "orderByColumn must be one of: id, name, message, timestamp")
+                            .check(str -> str == null || "id".equals(str) || "name".equals(str) || "message".equals(str) || "timestamp".equals(str), "orderByColumn must be one of: id, name, message, timestamp")
                             .get()).orElseGet(webmentionRepository::getOrderByColumn);
                     var orderByDirection    = ctx.queryParamAsClass("orderByDirection", String.class).getOrDefault(webmentionRepository.getOrderByDirection());
                     var approvedWebmentions = webmentionRepository.getWebmentionsByIsApproved(pageNumber, pageSize, orderByColumn, orderByDirection, true);

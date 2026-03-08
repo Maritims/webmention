@@ -18,17 +18,25 @@ import java.util.concurrent.Executor;
 
 public class InterceptableHttpClient extends HttpClient {
     @NotNull
-    private final HttpClient              delegate;
+    private final HttpClient               delegate;
     @NotNull
-    private final HttpRequestInterceptors httpRequestInterceptors = new HttpRequestInterceptors();
+    private final HttpRequestInterceptors  httpRequestInterceptors  = new HttpRequestInterceptors();
+    @NotNull
+    private final HttpResponseInterceptors httpResponseInterceptors = new HttpResponseInterceptors();
 
     public InterceptableHttpClient(@NotNull HttpClient delegate) {
         this.delegate = delegate;
     }
 
     @NotNull
-    public HttpClient addInterceptor(@NotNull HttpRequestInterceptor httpRequestInterceptor) {
+    public InterceptableHttpClient addInterceptor(@NotNull HttpRequestInterceptor httpRequestInterceptor) {
         httpRequestInterceptors.add(httpRequestInterceptor);
+        return this;
+    }
+
+    @NotNull
+    public InterceptableHttpClient addInterceptor(@NotNull HttpResponseInterceptor httpResponseInterceptor) {
+        httpResponseInterceptors.add(httpResponseInterceptor);
         return this;
     }
 
@@ -80,7 +88,9 @@ public class InterceptableHttpClient extends HttpClient {
     @Override
     public <T> HttpResponse<T> send(HttpRequest request, HttpResponse.BodyHandler<T> responseBodyHandler) throws IOException, InterruptedException {
         request = httpRequestInterceptors.intercept(request, delegate);
-        return delegate.send(request, responseBodyHandler);
+        var response = delegate.send(request, responseBodyHandler);
+        httpResponseInterceptors.intercept(response);
+        return response;
     }
 
     @Override

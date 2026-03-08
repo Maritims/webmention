@@ -2,6 +2,9 @@ package no.clueless.oauth;
 
 import io.javalin.Javalin;
 import io.javalin.testtools.JavalinTest;
+import no.clueless.oauth.javalin.OAuthServerPlugin;
+import no.clueless.oauth2.core.ClientStore;
+import no.clueless.oauth2.persistence.inmemory.InMemoryClientStore;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -16,7 +19,7 @@ class OAuthServerPluginTest {
     @BeforeEach
     void setUp() {
         clientStore = new InMemoryClientStore();
-        clientStore.registerClient("test-id", "test-secret", Set.of(Scope.WEBMENTIONS_MANAGE));
+        clientStore.registerClient("test-id", "test-secret", Set.of("webmentions:manage"));
         app = Javalin.create(config -> config.registerPlugin(new OAuthServerPlugin(clientStore, (client, scopes) -> "fake-jwt")));
     }
 

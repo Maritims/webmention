@@ -1,7 +1,7 @@
 package no.clueless.webmention.cli;
 
-import no.clueless.webmention.event.WebmentionEvent;
-import no.clueless.webmention.receiver.WebmentionHtmlSourceScanner;
+import no.clueless.webmention.core.event.WebmentionEvent;
+import no.clueless.webmention.core.receiver.WebmentionHtmlSourceScanner;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jsoup.nodes.Element;
@@ -88,6 +88,9 @@ public class WebmentionDirectoryWalker {
                         try {
                             var body      = Files.readString(file);
                             var sourceUrl = createSourceUrl(baseUri, rootDir, file);
+                            if (log.isDebugEnabled() && elementFilter != null) {
+                                log.debug("Processing file {} and applying element filter", file);
+                            }
                             return webmentionHtmlSourceScanner.findAllMentions(body, elementFilter)
                                     .entrySet()
                                     .stream()
