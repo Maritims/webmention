@@ -1,8 +1,8 @@
 package no.clueless.receiver;
 
-import no.clueless.webmention.WebmentionException;
-import no.clueless.webmention.receiver.WebmentionRequestVerifier;
-import no.clueless.webmention.receiver.WebmentionTargetVerifier;
+import no.clueless.webmention.core.WebmentionException;
+import no.clueless.webmention.core.receiver.WebmentionRequestVerifier;
+import no.clueless.webmention.core.receiver.WebmentionTargetVerifier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

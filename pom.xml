@@ -11,6 +11,14 @@
         <module>webmention-javalin</module>
         <module>webmention-service</module>
         <module>webmention-cli</module>
+        <module>oauth2-javalin</module>
+        <module>webmention-api-client</module>
+        <module>interceptable-http-client</module>
+        <module>webmention-persistence-sqlite</module>
+        <module>oauth2-core</module>
+        <module>oauth2-persistence-sqlite</module>
+        <module>sqlite-core</module>
+        <module>oauth2-persistence-inmemory</module>
     </modules>
 
     <name>Webmention Parent</name>
@@ -46,15 +54,16 @@
         <javalin.version>6.7.0</javalin.version>
         <jsoup.version>1.20.1</jsoup.version>
         <slf4j.version>2.0.17</slf4j.version>
-        <logback.version>1.5.27</logback.version>
+        <logback.version>1.4.9</logback.version>
         <junit.version>5.9.2</junit.version>
         <mockito.version>5.17.0</mockito.version>
         <sqlite.version>3.51.1.0</sqlite.version>
         <!-- Required by Javalin for serialization and deserialization -->
         <jackson.version>2.17.2</jackson.version>
         <commons-text.version>1.15.0</commons-text.version>
-        <native.maven.plugin.version>0.11.4</native.maven.plugin.version>
-        <jreleaser.skip>true</jreleaser.skip>
+        <java-jwt.version>4.4.0</java-jwt.version>
+        <jbcrypt.version>0.4</jbcrypt.version>
+        <annotations.version>24.1.0</annotations.version>
     </properties>
 
     <dependencyManagement>
@@ -105,6 +114,21 @@
                 <version>${logback.version}</version>
             </dependency>
             <dependency>
+                <groupId>com.auth0</groupId>
+                <artifactId>java-jwt</artifactId>
+                <version>${java-jwt.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mindrot</groupId>
+                <artifactId>jbcrypt</artifactId>
+                <version>${jbcrypt.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains</groupId>
+                <artifactId>annotations</artifactId>
+                <version>${annotations.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.junit.jupiter</groupId>
                 <artifactId>junit-jupiter-params</artifactId>
                 <version>${junit.version}</version>
@@ -116,6 +140,18 @@
                 <version>${mockito.version}</version>
                 <scope>test</scope>
             </dependency>
+            <dependency>
+                <groupId>io.javalin</groupId>
+                <artifactId>javalin-testtools</artifactId>
+                <version>${javalin.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-simple</artifactId>
+                <version>${slf4j.version}</version>
+                <scope>test</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -124,7 +160,6 @@
             <id>dry-run</id>
             <properties>
                 <dryRun>true</dryRun>
-                <jreleaser.dry.run>true</jreleaser.dry.run>
                 <gpg.skip>true</gpg.skip>
             </properties>
             <build>
@@ -134,7 +169,7 @@
                             <groupId>org.apache.maven.plugins</groupId>
                             <artifactId>maven-release-plugin</artifactId>
                             <configuration>
-                                <arguments>-Pnative -DdryRun=true -Djreleaser.dry.run=true</arguments>
+                                <arguments>-Pnative -DdryRun=true</arguments>
                             </configuration>
                         </plugin>
                     </plugins>
@@ -204,6 +239,20 @@
                 </configuration>
             </plugin>
         </plugins>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>3.5.3</version>
+                    <configuration>
+                        <excludes>
+                            <exclude>**/*IntegrationTest.java</exclude>
+                        </excludes>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
     </build>
 
 </project>
