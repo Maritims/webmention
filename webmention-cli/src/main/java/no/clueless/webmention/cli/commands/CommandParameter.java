@@ -1,4 +1,4 @@
-package no.clueless.webmention.cli;
+package no.clueless.webmention.cli.commands;
 
 import java.lang.annotation.*;
 

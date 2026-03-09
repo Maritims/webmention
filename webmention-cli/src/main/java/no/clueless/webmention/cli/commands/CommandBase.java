@@ -1,5 +1,8 @@
-package no.clueless.webmention.cli;
+package no.clueless.webmention.cli.commands;
 
+import no.clueless.webmention.cli.CommandParameterValidators;
+import no.clueless.webmention.cli.InvalidParameterValueException;
+import no.clueless.webmention.cli.MissingRequiredParameter;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,9 +19,9 @@ public abstract class CommandBase implements Runnable {
     private static final Logger log = LoggerFactory.getLogger(CommandBase.class);
 
     @FunctionalInterface
-    public interface Creator {
+    public interface Creator<T extends CommandBase> {
         @NotNull
-        CommandBase create(@NotNull String[] args) throws MissingRequiredParameter, InvalidParameterValueException;
+        T create(@NotNull String[] args) throws MissingRequiredParameter, InvalidParameterValueException;
     }
 
     private static final Map<Class<?>, Function<String, ?>>                                  PARSERS            = new HashMap<>(Map.of(
@@ -35,7 +38,7 @@ public abstract class CommandBase implements Runnable {
     @NotNull
     private final String description;
 
-    protected CommandBase() throws MissingRequiredParameter, InvalidParameterValueException {
+    protected CommandBase() {
         var annotation = this.getClass().getAnnotation(Command.class);
         if (annotation == null) {
             throw new IllegalArgumentException("Command class must be annotated with @Command");
@@ -139,11 +142,5 @@ public abstract class CommandBase implements Runnable {
 
     public String description() {
         return description;
-    }
-
-    public static <T extends CommandBase> @NotNull String help(@NotNull Class<T> commandClass) {
-        return String.join(" ", Arrays.stream(getParameters(commandClass))
-                .map(parameter -> String.format("\n\t%s, %s\n\t\t%s %s", parameter.shortName(), parameter.longName(), parameter.description(), parameter.required() ? "Required." : "Optional, defaults to " + parameter.defaultValue() + "."))
-                .toList());
     }
 }

@@ -1,5 +1,6 @@
 package no.clueless.webmention.cli;
 
+import no.clueless.webmention.cli.commands.CommandBase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -56,6 +57,7 @@ class CommandProcessorTest {
         var command = mock(CommandBase.class);
         var commandFactory = mock(CommandBase.Creator.class);
         when(commandFactory.create(any())).thenReturn(command);
+        //noinspection unchecked
         when(commandRegistry.find(eq("foo"))).thenReturn(Optional.of(commandFactory));
 
         // act

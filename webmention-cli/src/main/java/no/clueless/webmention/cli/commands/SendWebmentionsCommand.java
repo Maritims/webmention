@@ -1,6 +1,9 @@
-package no.clueless.webmention.cli;
+package no.clueless.webmention.cli.commands;
 
 import no.clueless.webmention.api_client.WebmentionApiClient;
+import no.clueless.webmention.cli.InvalidParameterValueException;
+import no.clueless.webmention.cli.MissingRequiredParameter;
+import no.clueless.webmention.cli.WebmentionDirectoryWalker;
 import no.clueless.webmention.core.event.WebmentionEvent;
 import no.clueless.webmention.core.persistence.Webmention;
 import no.clueless.webmention.core.receiver.WebmentionHtmlSourceScanner;
@@ -13,7 +16,7 @@ import java.nio.file.Path;
 import java.util.Set;
 
 @Command(
-        name = "send",
+        name = "send-webmention",
         description = "Sends a webmention.",
         parameters = {
                 @CommandParameter(longName = "uri", shortName = "u", description = "The base API URI.", requiresValue = true, required = true, type = URI.class),

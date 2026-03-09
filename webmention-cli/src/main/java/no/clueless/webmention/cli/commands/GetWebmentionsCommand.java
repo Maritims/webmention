@@ -1,7 +1,9 @@
-package no.clueless.webmention.cli;
+package no.clueless.webmention.cli.commands;
 
 import no.clueless.webmention.api_client.Pagination;
 import no.clueless.webmention.api_client.WebmentionManagementApiClient;
+import no.clueless.webmention.cli.InvalidParameterValueException;
+import no.clueless.webmention.cli.MissingRequiredParameter;
 import no.clueless.webmention.core.persistence.Webmention;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;

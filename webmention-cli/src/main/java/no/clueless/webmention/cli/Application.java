@@ -11,16 +11,11 @@ public class Application {
     private final        CommandProcessor processor;
 
     public Application(@NotNull CommandProcessor processor) {
-        this.processor          = processor;
+        this.processor = processor;
     }
 
     public Application() {
-        this(new CommandProcessor(new CommandRegistry()
-                .register("get", GetWebmentionsCommand::new)
-                .register("send", SendWebmentionsCommand::new)
-                .register("publish", PublishWebmentionCommand::new)
-                .register("unpublish", UnpublishWebmentionCommand::new)
-                .register("delete", DeleteWebmentionCommand::new)));
+        this.processor = new CommandProcessor(CommandRegistry.createWithAllCommands());
     }
 
     protected void handleEmptyArgs() {
@@ -67,11 +62,9 @@ public class Application {
         } catch (MissingRequiredParameter e) {
             printMissingRequiredParameter(e.getCommandName(), e.getParameterName());
             printHelp();
-            return;
         } catch (InvalidParameterValueException e) {
             printInvalidParameterValue(e.getCommandName(), e.getParameterName());
             printHelp();
-            return;
         }
     }
 

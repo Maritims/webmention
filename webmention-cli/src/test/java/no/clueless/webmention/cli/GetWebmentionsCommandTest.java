@@ -1,5 +1,6 @@
 package no.clueless.webmention.cli;
 
+import no.clueless.webmention.cli.commands.GetWebmentionsCommand;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

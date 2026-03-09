@@ -1,12 +1,14 @@
-package no.clueless.webmention.cli;
+package no.clueless.webmention.cli.commands;
 
 import no.clueless.webmention.api_client.WebmentionManagementApiClient;
+import no.clueless.webmention.cli.InvalidParameterValueException;
+import no.clueless.webmention.cli.MissingRequiredParameter;
 import org.jetbrains.annotations.NotNull;
 
 import java.net.URI;
 
 @Command(
-        name = "delete",
+        name = "delete-webmention",
         description = "Delete a webmention by its id.",
         parameters = {
                 @CommandParameter(longName = "uri", shortName = "u", description = "The base API URI.", requiresValue = true, required = true, type = URI.class),
