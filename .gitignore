@@ -1,4 +1,5 @@
 .env
+*.log
 *.db
 *.iml
 *.tgz
